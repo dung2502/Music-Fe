@@ -53,7 +53,7 @@ export const updatePasswordUser = async (userData, token) => {
 export const logout = async() => {
     try {
         const userId = JSON.parse(localStorage.getItem("user")).userId || JSON.parse(localStorage.getItem("user")).uid ;
-        await axios.post(` http://localhost:8080/api/auth/logout?userId=${userId}`);
+        await axios.post(` ${baseURL}/api/auth/logout?userId=${userId}`);
         localStorage.removeItem("user");
         window.location.href = "/";
     } catch (e) {
