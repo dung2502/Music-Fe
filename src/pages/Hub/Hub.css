@@ -1,0 +1,47 @@
+.featured-card {
+    height: 160px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 30px;
+    color: white;
+    text-align: center;
+    overflow: hidden;
+
+}
+.featured-card:hover {
+    transform: scale(1.04);
+    transition: transform 0.3s ease;
+}
+
+.bg-blue {
+    background: linear-gradient(to bottom right, #3b82f6, #2563eb);
+}
+
+.bg-purple {
+    background: linear-gradient(to bottom right, #a855f7, #ec4899);
+}
+.bg-brown {
+    background: linear-gradient(to bottom right, #7b3f00, #a0522d);
+}
+
+.bg-orange {
+    background: linear-gradient(to bottom right, #f97316, #fb923c);
+}
+.bg-xuan {
+    background: linear-gradient(to bottom right, #34D399, #10B981); /* Màu xanh lá cây tươi sáng */
+}
+
+.bg-tre {
+    background: linear-gradient(to bottom right, #EC4899, #F472B6); /* Màu hồng tươi sáng */
+}
+
+.bg-vui {
+    background: linear-gradient(to bottom right, #F59E0B, #FBBF24); /* Màu vàng tươi sáng */
+}
+
+.bg-buon {
+    background: linear-gradient(to bottom right, #6B7280, #4B5563); /* Màu xám nhẹ */
+}
