@@ -27,9 +27,6 @@ import UserEditInformation from "../pages/UserInformation/UserEditInformation";
 import History from "../pages/History/History";
 import {Song} from "../pages/Song/Song";
 
-
-
-
 export const userRoutes = [
   {
     path: '/',
