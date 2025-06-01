@@ -40,6 +40,18 @@ export const getAllSuggestedAlbums = async () => {
     }
 }
 
+export const getSixAlbumsBest = async () => {
+    try {
+        const temp
+            = await axios.get(`${BASE_URL}/api/public/albums/top-albums`);
+        console.log(temp.data)
+        return temp.data.content;
+    } catch (e) {
+        console.log(e)
+        return [];
+    }
+}
+
 export const getAllNewAlbumsRelease = async (national) => {
     try {
         const temp

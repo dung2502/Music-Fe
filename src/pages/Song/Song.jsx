@@ -37,12 +37,9 @@ export function Song() {
     };
 
     const handlePlaySong = () => {
-        if (!playSongList?.length || playSongList[0]?.id !== song.id) {
-            addSongList([song]);
-            changeSongIndex(0);
-        } else {
-            isPlayingSong ? toggleIsPlayingSong(false) : toggleIsPlayingSong(true);
-        }
+        addSongList([song]);
+        changeSongIndex(0);
+        toggleIsPlayingSong(true);
     };
 
     return (

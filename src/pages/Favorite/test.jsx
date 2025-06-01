@@ -7,7 +7,7 @@ import {RiMusic2Line} from "react-icons/ri";
 import * as songService from "../../core/services/SongService";
 import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import {FaPlay} from "react-icons/fa";
-import ModalSongMenu from "../../components/Modal/ModalSongMenu";
+import ModalSongMenu from "../../components/Modal/ModalMenu/ModalSongMenu";
 import {IoIosHeart} from "react-icons/io";
 import {LiaMicrophoneAltSolid} from "react-icons/lia";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";

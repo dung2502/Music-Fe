@@ -3,8 +3,10 @@ import { CiHeart, CiMenuKebab } from "react-icons/ci";
 import { usePlayMusic } from "../../core/contexts/PlayMusicContext";
 import React, { useEffect, useRef, useState } from "react";
 import {IoPause, IoPlaySkipForwardSharp} from "react-icons/io5";
-import {IoMdPlay} from "react-icons/io";
+import {IoIosHeart, IoMdPlay} from "react-icons/io";
 import * as songService from "../../core/services/SongService";
+import * as favoriteService from "../../core/services/FavoriteService";
+import {toast} from "react-toastify";
 
 
 export function PlayMusicFooter({ callPlayLyrics, callPlayList, openMenuSongFooter }) {
@@ -174,6 +176,12 @@ export function PlayMusicFooter({ callPlayLyrics, callPlayList, openMenuSongFoot
         openMenuSongFooter(true);
     }
 
+    const addNewFavoriteSong = async (song) => {
+        await favoriteService.addFavoriteSong(song);
+        toast.success("Đã cập nhật bài hát yêu thích mới");
+
+    }
+
     return (
         <Grid columns={1} md={2} lg={3} gap={4} alignItems="center" className="w-full h-full c-m-0">
             <Card className="" srcImg={playSongList[songIndexList].coverImageUrl}
@@ -187,7 +195,15 @@ export function PlayMusicFooter({ callPlayLyrics, callPlayList, openMenuSongFoot
                     ))} sizeImg={56}
                   onClick={window.innerWidth < 768 ? showPlayLyrics : null}
             >
-                <Button theme="reset" text="" icon={<CiHeart size={24} />} />
+                <Button className={'card-icon heart'} type={'button'}
+                        theme={'reset'}
+                        icon={<IoIosHeart size={24} fill={playSongList[songIndexList].userFavoriteStatus ? "red" : "white"}/>}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            addNewFavoriteSong(playSongList[songIndexList])
+                        }}>
+                </Button>
+
                 {
                     window.innerWidth < 768 &&
                     <Button theme="reset" text=""

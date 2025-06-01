@@ -18,7 +18,7 @@ function History() {
 
     const groupByDate = (listens) => {
         return listens.reduce((acc, listen) => {
-            const date = listen.listenedAt?.split("T")[0]; // lấy yyyy-mm-dd
+            const date = listen.listenedAt?.split("T")[0];
             if (!date) return acc;
             if (!acc[date]) acc[date] = [];
             acc[date].push(listen);

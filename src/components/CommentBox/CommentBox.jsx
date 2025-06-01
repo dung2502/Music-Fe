@@ -15,6 +15,7 @@ import wow from "../../assets/gif/wow.gif";
 import dislike from "../../assets/gif/dislike.gif";
 import like from "../../assets/gif/like.gif";
 import {usePopUp} from "../../core/contexts/PopUpContext";
+import { ModalDeleteComment } from "../Modal/ModalDeleteComment/ModalDeleteComment";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -39,6 +40,9 @@ export function CommentBox({openComment, callOpenComment}) {
     const songId = playSongList[songIndexList].songId;
     const urlSocketRef = useRef('');
     const [stompClient, setStompClient] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [commentToDelete, setCommentToDelete] = useState(null);
+
 
     useEffect(() => {
         if (songId !== undefined) {
@@ -103,7 +107,8 @@ export function CommentBox({openComment, callOpenComment}) {
 
     const getAllCommentBySong = async (songId, size) => {
         const temp = await commentService.getAllCommentsBySongId(songId, size);
-        setComments(temp.content)
+        console.log(temp.content);
+        setComments(temp.content);
         setNumberElement(temp.numberOfElements)
         setTotalElements(temp.totalElements)
     }
@@ -140,8 +145,6 @@ export function CommentBox({openComment, callOpenComment}) {
         newComment.content = '';
         newComment.song = null;
     };
-
-    // Submit reply
     const onSubmitReply = async (data) => {
         const newReply = {
             content: data.replyContent,
@@ -168,6 +171,30 @@ export function CommentBox({openComment, callOpenComment}) {
         newReply.content = '';
         newReply.parentComment = null;
     };
+
+    const openDeleteModal = (commentId) => {
+        setCommentToDelete(commentId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setCommentToDelete(null);
+        setIsDeleteModalOpen(false);
+    };
+
+    const confirmDeleteComment = async () => {
+        try {
+            console.log(commentToDelete);
+            await commentService.deleteComment(commentToDelete);
+            showToast("Đã xóa bình luận", 'success', '5000');
+            await getAllCommentBySong(songId, size);
+        } catch (error) {
+            showToast("Xóa bình luận thất bại", 'error', '5000');
+        } finally {
+            closeDeleteModal();
+        }
+    };
+
 
     const handleLikeComment = async (comment) => {
         try {
@@ -349,6 +376,8 @@ export function CommentBox({openComment, callOpenComment}) {
                                         >{comment.content}</Typography>
                                         <Flex justifyContent={'start'} gd={{width: "100%", position: 'relative'}}
                                               alignItems={"center"}>
+
+                                            {/*icons comment*/}
                                             <Flex className={'select-emotion'} gd={{width: "35%"}}>
                                                 <Button theme="reset" text={
                                                     userEmotion === 'like' ?
@@ -406,14 +435,25 @@ export function CommentBox({openComment, callOpenComment}) {
                                                             icon={<img src={dislike} alt="haha" height={18}/>}/>
                                                 </Flex>
                                             </Flex>
+
                                             <Button theme="reset"
                                                     gd={{padding: '0 10px', width: '20%'}}
                                                     text={
-                                                        <Typography tag={'span'} gd={{fontSize: '.7rem'}}>Phản
-                                                            hồi</Typography>
+                                                        <Typography tag={'span'} gd={{fontSize: '.7rem'}}>Phản hồi</Typography>
                                                     }
                                                     onClick={() => handleOpenReplyBox(comment.commentId)}
                                             />
+
+                                            {comment.user?.userId === userId && (
+                                                <Button theme="reset"
+                                                        gd={{padding: '0 10px', width: '20%'}}
+                                                        text={
+                                                            <Typography tag={'span'} gd={{fontSize: '.7rem', color: 'red'}}>Gỡ</Typography>
+                                                        }
+                                                        onClick={() => openDeleteModal(comment.commentId)}
+                                                />
+                                            )}
+
                                             <Flex justifyContent={'start'} gap={1} alignItems={"center"} gd={{width: "45%"}}>
                                                 {
                                                     comment.likes &&
@@ -490,6 +530,7 @@ export function CommentBox({openComment, callOpenComment}) {
                                                 timeAgo={timeAgo}
                                                 userHasEmotion={userHasEmotion}
                                                 handleRemoveEmotionComment={handleRemoveEmotionComment}
+                                                openDeleteModal={openDeleteModal}
                                             />
                                         ))}
                                     </div>
@@ -573,6 +614,11 @@ export function CommentBox({openComment, callOpenComment}) {
                 <Button className={'submit-comment'} type={'submit'} gd={{border: "none", marginLeft: 10}}
                         text={"Đăng tải"}></Button>
             </Form>
+            <ModalDeleteComment 
+                isOpen={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDeleteComment}
+            />
         </Container>
     )
 }

@@ -8,8 +8,7 @@ axios.defaults.withCredentials = true;
 
 export const login = async (data) => {
     try {
-        const response = await axios.post(`${baseURL}/api/auth/authenticate`, data)
-        console.log(response.data);
+        const response = await axios.post(`${baseURL}/api/auth/authenticate`, data);
         return response.data;
     } catch (error) {
         toast.error(error.response.data.message);
@@ -40,7 +39,6 @@ export const updatePasswordUser = async (userData, token) => {
     try{
         const userId = localStorage.getItem("id");
         const response = await axiosClient.put(`update-password/${userId}`, userData);
-        console.log(response)
         return response.data;
     }catch(err){
         console.log(err)
@@ -53,7 +51,7 @@ export const updatePasswordUser = async (userData, token) => {
 export const logout = async() => {
     try {
         const userId = JSON.parse(localStorage.getItem("user")).userId || JSON.parse(localStorage.getItem("user")).uid ;
-        await axios.post(` ${baseURL}/api/auth/logout?userId=${userId}`);
+        await axios.post(` http://localhost:8080/api/auth/logout?userId=${userId}`);
         localStorage.removeItem("user");
         window.location.href = "/";
     } catch (e) {
@@ -79,17 +77,18 @@ export const isAdmin = async() =>{
     return roles.some(role => role.roleName === 'ROLE_ADMIN');
 
 }
+
 export const isAssistant = async() =>{
     const roles = await getRoles();
     return roles.some(role => role.roleName === 'ROLE_ASSISTANT');
 
 }
+
 export const isListener = async() =>{
     const roles = await getRoles();
     return roles.some(role => role.roleName === 'ROLE_LISTENER');
 
 }
-
 
 export const adminOnly = () =>{
     return this.isAuthenticated() && this.isAdmin();

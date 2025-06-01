@@ -7,18 +7,16 @@ import {RiMusic2Line} from "react-icons/ri";
 import * as songService from "../../core/services/SongService";
 import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import {FaPlay} from "react-icons/fa";
-import ModalSongMenu from "../../components/Modal/ModalSongMenu";
+import ModalSongMenu from "../../components/Modal/ModalMenu/ModalSongMenu";
 import {IoIosHeart} from "react-icons/io";
 import {LiaMicrophoneAltSolid} from "react-icons/lia";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";
 import wave from "../../assets/gif/icon-playing.gif";
 import * as albumService from "../../core/services/AlbumService";
 import AlbumCard from "../../components/AlbumAndPlayListCard/AlbumCard";
-import * as artistService from "../../core/services/ArtistService";
 import * as PlaylistService from "../../core/services/PlayListService";
 import PlaylistCard from "../../components/AlbumAndPlayListCard/PlaylistCard";
-import SongCard from "../../components/SongCard/SongCard";
-import PlaylistUser from "../Playlist/PlaylistUser";
+import * as playlistService from "../../core/services/PlayListService";
 
 export function FavoriteList() {
     const navigate = useNavigate();
@@ -32,19 +30,23 @@ export function FavoriteList() {
     } = usePlayMusic();
     const [favoriteSongs, setFavoriteSongs] = useState([]);
     const [favoriteAlbums, setFavoriteAlbums] = useState([]);
-    const [favoriteArtists, setFavoriteArtists] = useState([]);
+    // const [favoriteArtists, setFavoriteArtists] = useState([]);
     const [favoritePlayLists, setFavoritePlaylists] = useState([]);
     const [modalSongIndex, setModalSongIndex] = useState(0);
     const [isOpenSongMenu, setIsOpenSongMenu] = useState(false);
     const [numberSelected, setNumberSelected] = useState(0);
-    // const playlistRef = useRef(null);
-    useEffect(() => {
+    const [playlistListenCounts, setPlaylistListenCounts] = useState({});
+    const [playlistListenCountsFav, setPlaylistListenCountsFav] = useState({});
 
-        const fetchData = async () => {
-            await getFavoriteArtistList('','DESC',0,9);
-        }
-        fetchData();
-    }, []);
+    const [playlists, setPlaylists] = useState([]);
+    // const playlistRef = useRef(null);
+    // useEffect(() => {
+    //
+    //     const fetchData = async () => {
+    //         await getFavoriteArtistList('','DESC',0,9);
+    //     }
+    //     fetchData();
+    // }, []);
 
     useEffect(() => {
 
@@ -89,6 +91,13 @@ export function FavoriteList() {
         };
     }, []);
 
+    useEffect(() => {
+        const fetchPlaylists = async () => {
+            await getAllPlaylists();
+        }
+        fetchPlaylists();
+    }, [])
+
     const getFavoriteSongsList = async (sort, direction,page,size) => {
         const temp = await songService.getAllFavoriteSongs(sort, direction,page,size);
         setFavoriteSongs(temp.content);
@@ -101,12 +110,28 @@ export function FavoriteList() {
     const getFavoritePlaylist = async (sort, direction,page,size) => {
         const temp = await PlaylistService.getAllFavoritePlaylists(sort, direction,page,size);
         setFavoritePlaylists(temp.content);
+        const listenCounts = {};
+        for (const playlist of temp.content) {
+            const count = await playlistService.getTotalPlaylistListens(playlist.playlistId);
+            listenCounts[playlist.playlistId] = count;
+        }
+        console.log(listenCounts);
+        setPlaylistListenCountsFav(listenCounts);
     }
 
-    const getFavoriteArtistList = async (sort, direction,page,size) => {
-        const temp = await artistService.getAllFavoriteArtists(sort, direction,page,size);
-        setFavoriteArtists(temp.content);
-    }
+    const getAllPlaylists = async () => {
+        const temp = await playlistService.getAllPlaylistByUserId();
+        setPlaylists(temp);
+        console.log(temp);
+
+        const listenCounts = {};
+        for (const playlist of temp) {
+            const count = await playlistService.getTotalPlaylistListens(playlist.playlistId);
+            listenCounts[playlist.playlistId] = count;
+        }
+        console.log(listenCounts);
+        setPlaylistListenCounts(listenCounts);
+    };
 
     const handlePlaySong = (index) => {
         if (playSongList !== favoriteSongs) {
@@ -173,39 +198,39 @@ export function FavoriteList() {
         <Container>
             <Group>
                 <Typography tag="h1" gd={{fontSize: "40px", marginBottom:"16px"}}>THƯ VIỆN <AiFillPlayCircle style={{paddingTop:"10px"}}/></Typography>
-                {/*<Flex gap={"7"} gd={{ marginBottom:"16px"}}>*/}
-                {/*    {favoriteArtists && favoriteArtists.map((artist, index) => (*/}
-                {/*        <Card title={artist.artistName} key={index}*/}
-                {/*              srcImg={artist.avatar}*/}
-                {/*              shape={"circle"} sizeImg={130} gd={{ width: "16,666%"}}*/}
-                {/*              urlLink={`/artists/${artist.artistName}`}*/}
-                {/*        />*/}
-                {/*    ))}*/}
-                {/*    <Group gd={{textAlign: "center", width: "16,666%"}}>*/}
-                {/*        <Typography gd={{*/}
-                {/*            borderRadius: "50%",*/}
-                {/*            border: "1px solid",*/}
-                {/*            width: "50px",*/}
-                {/*            height: "px",*/}
-                {/*            fontSize: "30px",*/}
-                {/*            paddingTop: "50px"*/}
-                {/*        }}>*/}
-                {/*            <AiOutlineArrowRight/>*/}
-                {/*        </Typography>*/}
-                {/*        <Typography gd={{paddingRight :'36px'}}>Xem tất cả</Typography>*/}
-                {/*    </Group>*/}
-                {/*</Flex>*/}
             </Group>
 
             <Group id="playlist" gd={{marginBottom:"30px"}}>
                 <Flex between={true} gd={{marginBottom:"20px"}}>
                     <Typography tag={"h1"} gd={{fontSize:"25px"}}>PLAYLIST <AiFillPlusCircle style={{paddingTop:"10px",fontSize:"30px"}}/></Typography>
-                    <Typography tag={"p"} gd={{fontSize:"15px",color:"#333"}}>Tất cả <AiOutlineRight style={{marginTop:"5px"}}/></Typography>
+                    <Typography 
+                        tag={"p"}
+                        gd={{
+                            fontSize:"15px",
+                            color:"#333",
+                            cursor: "pointer",
+                            "&:hover": {
+                                color: "#1db954"
+                            }
+                        }}
+                        onClick={() => navigate('/playlists')}
+                    > 
+                        Tất cả <AiOutlineRight style={{marginTop:"5px"}}/>
+                    </Typography>
                 </Flex>
                 <Flex gap={7} >
-                  <PlaylistUser/>
+                    <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
+                        {playlists && playlists.map((playlist, index) => (
+                            <PlaylistCard
+                                playlist={playlist}
+                                key={index}
+                                listenCount={playlistListenCounts[playlist.playlistId] || 0}
+                            />
+                        ))}
+                    </Grid>
                 </Flex>
             </Group>
+
             <Flex gap={8} gd={{borderBottom:"1px solid white",marginBottom:"30px", padding: "5px 0"}}>
                 <Button id="song" theme={"reset"}
                         gd={numberSelected === 0 ? {color: "#fff"} : {}}
@@ -231,10 +256,6 @@ export function FavoriteList() {
                         }}
                         text={"PLAYLIST"}
                 ></Button>
-            </Flex>
-            <Flex gd={{marginBottom:"30px"}}>
-                <Typography tag="p" gd={{color:"#fff", textAlign:"center", width:'100px', height:'25px',borderRadius:'30px', border:'1px solid black', background:"#ec4899",fontSize:"13px", paddingTop:'3px'}}>BÀI HÁT</Typography>
-                <Typography tag="p" gd={{color:"#fff", textAlign:"center", width:'100px', height:'25px',borderRadius:'30px', border:'1px solid black',fontSize:"13px", paddingTop:'3px'}}>ĐÃ TẢI LÊN</Typography>
             </Flex>
 
             {numberSelected === 0 ? (
@@ -312,15 +333,21 @@ export function FavoriteList() {
                     ))}
                 </Grid>
             ) : numberSelected === 1 ? (
+
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
                     {favoriteAlbums && favoriteAlbums.map((album, index) => (
                         <AlbumCard album={album} key={index}/>
                     ))}
                 </Grid>
+
             ) : (
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
                     {favoritePlayLists && favoritePlayLists.map((playlist, index) => (
-                        <PlaylistCard playlist={playlist} key={index}/>
+                        <PlaylistCard
+                            playlist={playlist}
+                            key={index}
+                            listenCount={playlistListenCountsFav[playlist.playlistId] || 0}
+                        />
                     ))}
                 </Grid>
             )}`

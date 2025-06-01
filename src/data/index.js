@@ -26,6 +26,7 @@ import { IoMusicalNotes } from "react-icons/io5";
 import { GiMicrophone } from "react-icons/gi";
 import { BiSolidAlbum } from "react-icons/bi";
 import { RiPlayList2Line } from "react-icons/ri";
+import { MdOutlinePayments } from "react-icons/md";
 import {AiFillNotification} from "react-icons/ai";
 
 export const songsData = [
@@ -116,6 +117,7 @@ export const navigationDashboardItems1 = [
     { id: 'artists', label: 'Nghệ sĩ', link: '/dashboard/artists', icon: <GiMicrophone size={22} />, iconPosition: 'left' },
     { id: 'albums', label: 'Albums', link: '/dashboard/albums', icon: <BiSolidAlbum size={22} />, iconPosition: 'left' },
     { id: 'playlists', label: 'Danh sách phát', link: '/dashboard/playlists', icon: <RiPlayList2Line size={22} />, iconPosition: 'left' },
+    { id: 'payments', label: 'Danh sách thanh toán', link: '/dashboard/payments', icon: <MdOutlinePayments size={22} />, iconPosition: 'left' },
 ];
 
 export const navigationDashboardItems2 = [

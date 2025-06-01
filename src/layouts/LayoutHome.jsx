@@ -8,7 +8,7 @@ import { MdMenuOpen } from "react-icons/md";
 import React, {useEffect, useState} from "react";
 import {PlayMusicFooter} from "../components/Footer/PlayMusicFooter";
 import {usePlayMusic} from "../core/contexts/PlayMusicContext";
-import { ModalUserAccess } from "../components/Modal/ModalUserAccess";
+import { ModalUserAccess } from "../components/Modal/ModalMenu/ModalUserAccess";
 import { navigationHomeItems1, navigationHomeItems2, navigationHomeItems3 } from "../data";
 import {LyricAndComment} from "../components/LyricAndComment/LyricAndComment";
 import { SidebarHomeMobile } from "../components/SideBar/SidebarHomeMobile";
@@ -21,16 +21,17 @@ import {Stomp} from "@stomp/stompjs";
 import * as notificationService from "../core/services/NotificationService";
 
 import {PlayQueue} from "../components/Play-queue/PlayQueue";
-import ModalSearch from "../components/Modal/ModalSearch";
+import ModalSearch from "../components/Modal/ModalMenu/ModalSearch";
 import InputSearchHome from "../components/InputSearch/InputSearchHome";
-import ModalSongMenu from "../components/Modal/ModalSongMenu";
-import CreatePlaylistModal from "../components/CreatePlaylistModal/CreatePlaylistModal";
-import {ModalSelectTheme} from "../components/Modal/ModalSelectTheme";
+import ModalSongMenu from "../components/Modal/ModalMenu/ModalSongMenu";
+import CreatePlaylistModal from "../components/Modal/ModalCreatePlaylist/CreatePlaylistModal";
+import {ModalSelectTheme} from "../components/Modal/ModalMenu/ModalSelectTheme";
 import {IoShirt} from "react-icons/io5";
 import shirt from "../assets/icons/shirt.svg";
 import {BiMessageRoundedDetail} from "react-icons/bi";
 import {ChatBox} from "../components/ChatBox/ChatBox";
-import ModalMenuSigUp from "../components/Modal/ModalMenuSign";
+import ModalMenuSigUp from "../components/Modal/ModalMenuSign/ModalMenuSign";
+import * as userService from "../core/services/UserService";
 
 var stompClient = null;
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -41,6 +42,8 @@ function LayoutHome() {
     const [isOpenSongMenu, setIsOpenSongMenu] = useState(false);
     const [isModalPlaylistOpen, setIsModalPlaylistOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
+    const [isVip, setIsVip] = useState(false);
+    const [userIf, setUserIf] = useState(null);
 
     const {
         playSongList,
@@ -97,12 +100,22 @@ function LayoutHome() {
         console.log(error)
     }
 
+    const getUser = async () => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const temp = await userService.getUserById(user.userId);
+        setUserIf(temp);
+        setIsVip(temp.isVip);
+    };
+
     const user = JSON.parse(localStorage.getItem("user"));
     useEffect(() => {
         if (user&&user.avatar) {
             setAvatar(user.avatar);
         } else{
             setAvatar('https://img.icons8.com/nolan/64/1A6DFF/C822FF/user-default.png');
+        }
+        if (isAuthenticated) {
+            getUser();
         }
     }, []);
 
@@ -117,17 +130,24 @@ function LayoutHome() {
     }, []);
 
     useEffect(() => {
-        getRoles().then((roles) => {
-            const role = roles.find(r => r.roleName === 'ROLE_ADMIN') || roles[0];
+        getRoles().then((res) => {
+            const rolesArray = Array.isArray(res) ? res : res.data || Object.values(res);
+            if (!Array.isArray(rolesArray)) {
+                console.error("roles is not a valid array:", res);
+                return;
+            }
+
+            const role = rolesArray.find(r => r.roleName === 'ROLE_ADMIN') || rolesArray[0];
             if (role) {
                 getAllNotifications(role.roleId);
             }
-        });
+        }).catch(err => console.error("Error fetching roles:", err));
 
         if (openNotification === true) {
             updateMarkAllRead();
         }
     }, [openNotification]);
+
 
     const getAllNotifications =(roleId)=>{
         console.log("Hello");
@@ -233,6 +253,8 @@ function LayoutHome() {
                                     }}>
                             </Button>
                         )}
+
+                        {!isVip && (<Button theme={"primary"} text={"Nâng cấp tài khoản"} className="mt-4" onClick={() => navigate('/vip')}></Button>)}
                     </Sidebar>
                 </RenderIf>
                 <Group>
@@ -262,8 +284,14 @@ function LayoutHome() {
 
                             </Flex>
                             <Flex gap={3}>
+
                                 <RenderIf isTrue={[4, 5, 6].includes(breakpoints)}>
                                     <Flex className=" items-center">
+                                        {isVip && (
+                                            <Typography className="ml-2 text-yellow-500 font-bold">
+                                                VIP
+                                            </Typography>
+                                        )}
                                         <Button text="" className="setting-home"
                                                 theme="setting"
                                                 icon={<img src={shirt} alt={"shirt"} style={{width: "1.5rem", height: '1.5rem'}}/> }
@@ -278,8 +306,9 @@ function LayoutHome() {
                                             <Typography tag="span" className="m-0 !-ml-3 bg-red-600 h-fit rounded-full text-white px-1 text-[12px]">{numberNotification}</Typography>
                                          </>} rounded="rounded-full" onClick={()=>setOpenNotification(!openNotification)} />
                                 )}
+
                                 {
-                                    isAuthenticated && (
+                                    isAuthenticated && isVip && (
                                         <Button text="" className="setting-home" theme="setting" icon={<BiMessageRoundedDetail size={24} />} rounded="rounded-full"
                                                 onClick={()=>setOpenChatModal(!openChatModal)}/>
                                     )
@@ -305,9 +334,10 @@ function LayoutHome() {
 
 
             <LyricAndComment showLyrics={isShowPlayLyrics}></LyricAndComment>
+
             <PlayQueue showPlayList={isShowQueues}></PlayQueue>
-            <ModalSearch isOpen={openModalSearch} searchValue={searchValue}
-                         onClose={() => setOpenModalSearch(false) } position={positionInputSearch}/>
+            <ModalSearch isOpen={openModalSearch} searchValue={searchValue} onClose={() => setOpenModalSearch(false) } position={positionInputSearch}/>
+
             <ModalUserAccess isOpen={openModalAvatar} onClose={() => setOpenModalAvatar(!openModalAvatar)} />
             <RenderIf isTrue={[0, 1, 2].includes(breakpoints)}>
                 <SidebarHomeMobile

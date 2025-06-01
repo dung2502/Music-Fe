@@ -104,38 +104,50 @@ export function ArtistCreate(){
     }
 
     const onSubmit = async (data) => {
+        let flag = false;
+        const newError = {};
+
         data.genres = addGenres;
         data.biography = biography;
         data.avatar = avatar;
         data.songs = addSongs;
         data.albums = addAlbums;
-        console.log(data);
 
-        let flag = false;
         if (addGenres.length < 1) {
             flag = true;
-            setValidateError({genres: "Thể loại không được để trống!"});
+            newError.genres = "Nghệ sĩ phải thuộc ít nhất một thể loại!";
         }
-        if (avatar === null) {
+
+        if (!avatar || avatar.trim() === "") {
             flag = true;
-            setValidateError({avatar: "Ảnh đại diện không được để trống!"})
+            newError.avatar = "Ảnh đại diện không được để trống!";
+        } else if (avatar.length > 300) {
+            flag = true;
+            newError.avatar = "URL ảnh đại diện không được vượt quá 300 ký tự!";
         }
-        if (flag === true) {
-            return ;
+
+        if (biography && biography.length > 2000) {
+            flag = true;
+            newError.biography = "Tiểu sử không được vượt quá 2000 ký tự!";
         }
+
+        setValidateError(newError);
+        if (flag) return;
+
         try {
             if (id !== undefined) {
                 await artistService.updateArtist(data);
             } else {
                 await artistService.saveArtist(data);
             }
-            toast.success("Thêm mới nghệ sĩ thành công!");
+            toast.success("Lưu nghệ sĩ thành công!");
+            navigate("/dashboard/artists");
         } catch (e) {
-            setValidateError(e.errorMessage);
-            if(validateError) return toast.warn("Kiểm tra lại việc nhập!");
+            setValidateError(e.errorMessage || {});
             toast.error("Thêm mới thất bại!");
         }
-    }
+    };
+
 
     const handleAddGenre = (event) => {
         if (event.target.value === "") {
@@ -195,16 +207,22 @@ export function ArtistCreate(){
             <Group className='overflow-hidden'>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                     <Grid md={2} gap={4}>
+
                         <Label>
                             <Typography>Tên nghệ sĩ</Typography>
                             <Input size={4} placeholder="Tên nghệ sĩ"
                                    {...register("artistName", {
-                                       required: "Không được để trống!"
+                                       required: "Tên nghệ sĩ không được để trống!",
+                                       maxLength: {
+                                           value: 100,
+                                           message: "Tên nghệ sĩ không được vượt quá 100 ký tự!"
+                                       }
                                    })}
                             />
                             <ErrorMessage condition={errors} message={errors?.artistName?.message} />
-                            <ErrorMessage condition={validateError} message={validateError?.artistName}/>
+                            <ErrorMessage condition={validateError} message={validateError?.artistName} />
                         </Label>
+
                         <Label>
                             <Typography>Thể loại</Typography>
                             <Flex>
@@ -247,13 +265,17 @@ export function ArtistCreate(){
                                 ))}
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Hình ảnh đại diện</Typography>
                             <Flex>
                                 <UploadOneImage className='form-label-child'
-                                                onImageUrlChange={(url) => handleOneImageUrlChange(url)}/>
+                                                onImageUrlChange={(url) => handleOneImageUrlChange(url)} />
                             </Flex>
-                            <ErrorMessage condition={validateError} message={validateError?.avatar}/>
+                            {avatar?.length > 300 && (
+                                <ErrorMessage condition={true} message="URL ảnh đại diện không được vượt quá 300 ký tự!" />
+                            )}
+                            <ErrorMessage condition={validateError} message={validateError?.avatar} />
                             <Flex justifyContent={'space-between'} alignItems="center" gd={{width: '100%', flexWrap: 'wrap'}}>
                                 {avatar &&
                                     <Flex justifyContent="start" alignItems="center"
@@ -283,6 +305,7 @@ export function ArtistCreate(){
                                 }
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Danh sách bài hát</Typography>
                             <Flex>
@@ -325,6 +348,7 @@ export function ArtistCreate(){
                                 ))}
                             </div>
                         </Label>
+
                         <Label>
                             <Typography>Album</Typography>
                             <Flex>
@@ -369,11 +393,16 @@ export function ArtistCreate(){
                                 ))}
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Tiểu sử </Typography>
-                            <Editor value={biography} onChange={handleChangeBiography}/>
-                            <ErrorMessage condition={validateError} message={validateError?.biography}/>
+                            <Editor value={biography} onChange={handleChangeBiography} />
+                            {biography?.length > 2000 && (
+                                <ErrorMessage condition={true} message="Tiểu sử không được vượt quá 2000 ký tự!" />
+                            )}
+                            <ErrorMessage condition={validateError} message={validateError?.biography} />
                         </Label>
+
                     </Grid>
                     <Flex className="form-btn-mt">
                         <Button type="submit" text="Thêm mới" size={4} icon={<IoMdAdd />} gap={1}/>

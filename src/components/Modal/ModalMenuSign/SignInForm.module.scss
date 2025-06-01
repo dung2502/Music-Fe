@@ -1,0 +1,61 @@
+.signin-form {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+        color: #1e293b;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+
+        .input-group {
+            flex-direction: column;
+            gap: 0.25rem;
+            display: inline-grid;
+
+
+            label {
+                font-weight: 500;
+                color: #0f172a;
+            }
+
+            input {
+                padding: 1rem;
+                font-size: 1rem;
+                border: 1px solid #cbd5e1;
+                border-radius: 0.5rem;
+                transition: border 0.3s ease;
+
+                &:focus {
+                    border-color: #3b82f6;
+                    outline: none;
+                }
+            }
+
+            .error {
+                color: #ef4444;
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+        }
+
+        .submit-btn {
+            margin-top: 1rem;
+            align-self: center;
+            width: 100%;
+        }
+    }
+
+    .back-button {
+        margin-bottom: 1rem;
+    }
+}

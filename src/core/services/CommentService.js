@@ -7,6 +7,7 @@ const BASE_URL = process.env.REACT_APP_API_URL;
 export const getAllCommentsBySongId = async (songId, size) => {
     try {
         const temp = await axios.get(`${BASE_URL}/api/public/comments/song/${songId}?size=${size}`);
+        console.log(temp.data);
         return temp.data;
     } catch (error) {
         console.log(error);
@@ -17,6 +18,7 @@ export const getAllCommentsBySongId = async (songId, size) => {
 export const getAllRepliesByParentCommentId = async (parentCommentId, size) => {
     try {
         const temp = await axios.get(`${BASE_URL}/api/public/comments/replies/${parentCommentId}?size=${size}`);
+        console.log(temp.data);
         return temp.data;
     } catch (error) {
         console.log(error);
@@ -35,23 +37,23 @@ export const saveComment = async (comment) => {
     }
 }
 
-export const updateComment = async (comment) => {
+export const deleteComment = async (commentId) => {
     try {
-        await axiosClient.put(`comments/${comment.id}`, comment);
-    } catch (e) {
-        console.log(e)
-        throw e.response.data;
-    }
-}
+        const user = JSON.parse(localStorage.getItem("user"));
+        const token = user?.token;
 
-export const deleteComment = async (id) => {
-    try {
-        await axiosClient.delete(`comments/${id}`);
+        await axiosClient.delete(`comments/${commentId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
     } catch (e) {
-        console.log(e)
-        throw e.response.data;
+        console.log(e);
+        throw e.response?.data || "Lỗi khi xóa bình luận";
     }
-}
+};
+
+
 
 export const likeComment = async (commentId) => {
     try {

@@ -6,6 +6,7 @@ import {CiEdit} from "react-icons/ci";
 import {MdDelete} from "react-icons/md";
 import {toast} from "react-toastify";
 import {useForm} from "react-hook-form";
+import {getAllPlaylistAuth} from "../../../core/services/PlayListService";
 
 function PlayList() {
     const navigate = useNavigate();
@@ -26,7 +27,7 @@ function PlayList() {
 
     const showPlaylist = async (playlistName, page) => {
         try {
-            const response = await PlaylistService.getAllPlaylist(playlistName, page);
+            const response = await PlaylistService.getAllPlaylistAuth(playlistName, page);
             setPlaylist(response.content);
             setTotalPages(response.totalPages);
         } catch (error) {
@@ -42,7 +43,7 @@ function PlayList() {
     const onSubmit = async (data) => {
         const {playlistName = ''} = data;
         try {
-            const temp = await PlaylistService.getAllPlaylist(playlistName, pageNumber);
+            const temp = await PlaylistService.getAllPlaylistAuth(playlistName, pageNumber);
             setPlaylist(temp.content);
             setTotalPages(temp.totalPages);
         } catch (e) {
@@ -52,7 +53,6 @@ function PlayList() {
 
     const confirmDeletePlaylist = async () => {
         try {
-            console.log("Delete");
             await PlaylistService.removePlaylistById(playlistToDelete);
             toast.success('Xóa playlist thành công!');
             setModalVisible(false);
@@ -83,6 +83,11 @@ function PlayList() {
             key: 'artist',
             header: 'Mã PlaylistUser',
             render: (row) => row.playlistCode,
+        },
+        {
+            key: 'creatorName',
+            header: 'Tên người tạo',
+            render: (row) => row.appUser?.fullName || 'Không xác định',
         },
         {
             key: 'action',

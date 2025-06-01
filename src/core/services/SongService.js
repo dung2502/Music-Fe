@@ -41,6 +41,7 @@ export async function getAllSongsWithPage(contentSearch, page) {
 }
 
 
+
 export async function getAllSuggestedSongs() {
     try {
         const temp
@@ -122,7 +123,6 @@ export async function getTop100Songs() {
     try {
         const temp
             = await axios.get(`${BASE_URL}/api/public/songs/top-100-songs`);
-        console.log(temp.data);
         return temp.data;
     } catch (e) {
         console.log(e)
@@ -188,6 +188,16 @@ export const updateUserListens = async (songId) => {
     }
 }
 
+export async function getSuggestedSongsForUser() {
+    try {
+        const res = await axiosClient.get(`/songs/suggestions`);
+        console.log(res.data)
+        return res.data.content;
+    } catch (e) {
+        console.error('Error updating user listen:', e);
+    }
+}
+
 export const getRecentUserListens = async () => {
     const userData = localStorage.getItem('user');
     if (!userData) return [];
@@ -203,6 +213,36 @@ export const getRecentUserListens = async () => {
         return [];
     }
 };
+
+export const getSixSongsBest = async () => {
+    try {
+        const temp = await axios.get(`${BASE_URL}/api/public/songs/top-6-most-listened`);
+        return temp.data.content;
+    } catch (e) {
+        console.log(e)
+        return [];
+    }
+}
+
+export const getSongNewReleased = async () => {
+    try {
+        const temp = await axios.get(`${BASE_URL}/api/public/songs/song-new-released`);
+        return temp.data.content;
+    } catch (e) {
+        console.log(e)
+        return [];
+    }
+}
+
+export const getTotalSongListenBySongId = async (songId) => {
+    try {
+        const temp = await axios.get(`${BASE_URL}/api/public/song-listens/total?songId=${songId}`);
+        return temp.data;
+    } catch (e) {
+        console.log(e)
+        return [];
+    }
+}
 
 
 

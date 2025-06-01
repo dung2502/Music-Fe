@@ -8,6 +8,7 @@ import wave from "../../assets/gif/icon-playing.gif";
 import {FaPlay} from "react-icons/fa";
 import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";
+import {toast} from "react-toastify";
 
 export default function AlbumCard({album, key}) {
     const {
@@ -23,12 +24,17 @@ export default function AlbumCard({album, key}) {
 
     const addNewFavoriteAlbum = async (album) => {
         await favoriteService.addFavoriteAlbum(album);
+        toast.success("Đã cập nhật albums yêu thích mới");
     }
 
     const handlePlayAlbum = (index) => {
-        addSongList(album.songs)
-        changeSongIndex(0);
-        setAlbumPlaylistId(index);
+
+        if (album?.songs && Array.isArray(album.songs) && album.songs.length > 0)
+        {
+            addSongList(album.songs);
+            changeSongIndex(0);
+            setAlbumPlaylistId(index);
+        }
     }
 
     const handlePlayAndPauseAlbum = () => {
@@ -41,6 +47,7 @@ export default function AlbumCard({album, key}) {
               title={album.title.length > 17 ? `${album.title.substring(0, 15)}...` : album.title}
               urlLink={`/albums/${album.albumId}`}
               LinkComponent={Link} description={album.provide}
+
               children={
                   <Flex justifyContent={"center"} alignItems={"center"} className={'action-menu'}>
                       <Button className={'card-icon heart'} type={'button'}
@@ -51,8 +58,10 @@ export default function AlbumCard({album, key}) {
                               }}
                       >
                       </Button>
+
                       {
                           albumOrPlaylistId === album.albumId ?
+
                               <Button theme={'reset'} className={'card-icon play'}
                                       onClick={handlePlayAndPauseAlbum}
                                       icon={
@@ -62,6 +71,7 @@ export default function AlbumCard({album, key}) {
                                       gd={{border: 'none'}}
                               >
                               </Button>
+
                               :
                               <Button theme={'reset'} className={'card-icon play'}
                                       onClick={() => handlePlayAlbum(album.albumId)}

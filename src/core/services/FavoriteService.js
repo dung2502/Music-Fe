@@ -3,12 +3,12 @@ import axiosClient from "../../utils/axiosClient";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
-export const getAllFavorite = async (search) => {
+export const getAllFavoriteForUser = async () => {
     try {
         const user = JSON.parse(localStorage.getItem("user"));
         const userId = user.userId;
         console.log(userId)
-        const response = await axios.get(`${BASE_URL}/api/auth/favorites/${userId}?search=${search}`);
+        const response = await axios.get(`${BASE_URL}/api/auth/favorites?userId=${userId}`);
         return response.data;
     } catch (e) {
         return [];

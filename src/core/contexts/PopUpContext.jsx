@@ -60,6 +60,7 @@ export const PopUpProvider = ({ children }) => {
                     </div>
                 ))}
             </div>
+
         </PopUpContext.Provider>
     );
 };

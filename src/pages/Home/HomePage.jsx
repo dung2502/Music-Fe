@@ -13,9 +13,11 @@ import {IoIosHeart} from "react-icons/io";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";
 import wave from "../../assets/gif/icon-playing.gif";
 import {FaPlay} from "react-icons/fa";
-import ModalSongMenu from "../../components/Modal/ModalSongMenu";
+import ModalSongMenu from "../../components/Modal/ModalMenu/ModalSongMenu";
 import AlbumCard from "../../components/AlbumAndPlayListCard/AlbumCard";
 import SongCard from "../../components/SongCard/SongCard";
+import {getSixAlbumsBest} from "../../core/services/AlbumService";
+import TopSongCard from "../../components/TopSongs/TopSongCard";
 
 function HomePage() {
 
@@ -45,20 +47,31 @@ function HomePage() {
     };
 
     const [albums, setAlbums] = useState([]);
+    const [songs, setSongs] = useState([]);
     const [suggestedSongs, setSuggestedSongs] = useState([]);
+    const [newReleasedSongs, setNewReleasedSongs] = useState([]);
     const [recentListens, setRecentListens] = useState([]);
     const [top100Songs, setTop100Songs] = useState([]);
+    const [songListenCounts, setSongListenCounts] = useState({});
+
+
+    const isAuthenticated = !!localStorage.getItem('user');
 
 
 
     useEffect(() => {
         const fetchData = async () => {
-                    await getAllAlbumsFromService();
-                    await getAllSongSuggested();
+                    await getSixAlbumsHighListening();
+                    await getSixSongsHighListening();
+                    await getNewReleasedSong()
+
+                    if (isAuthenticated) {
+                        await getAllSongSuggested();
+                    }
         };
         fetchData();
 
-    }, [])
+    }, [isAuthenticated])
 
     useEffect(() => {
         const fetchRecentListens = async () => {
@@ -76,14 +89,30 @@ function HomePage() {
         fetchData();
     }, []);
 
-    const getAllAlbumsFromService = async () => {
-        const temp = await albumsService.getAllSuggestedAlbums();
+    const getSixAlbumsHighListening = async () => {
+        const temp = await albumsService.getSixAlbumsBest();
         setAlbums(temp);
     }
 
+    const getSixSongsHighListening = async () => {
+        const temp = await songService.getSixSongsBest();
+        setSongs(temp);
+        const listenCounts = {};
+        for (const song of temp){
+            const count = await songService.getTotalSongListenBySongId(song.songId)
+            listenCounts[song.songId] = count;
+        }
+        setSongListenCounts(listenCounts);
+    };
+
     const getAllSongSuggested = async () => {
-        const temp = await songService.getAllSuggestedSongs();
+        const temp = await songService.getSuggestedSongsForUser();
         setSuggestedSongs(temp);
+    }
+
+    const getNewReleasedSong = async () => {
+        const temp = await songService.getSongNewReleased();
+        setNewReleasedSongs(temp);
     }
 
     const getNew100Songs = async () => {
@@ -103,49 +132,53 @@ function HomePage() {
                         srcImg="https://photo-zmp3.zmdcdn.me/banner/5/0/3/b/503b76b9c1d5102e06fe07c26b507a5c.jpg"></Card>
                 </Slider>
             </Container>
+                
+            {isAuthenticated && (
+                <>
+                    <Container withShadow={false}>
+                        <Flex alignItems="center" justifyContent="between">
+                            <Typography tag="h2">Nghe Gần Đây</Typography>
+                            <Link to="/history">
+                                <Button gd={{ color: "white"}}
+                                        text="Tất cả"
+                                        theme="transparent"
+                                        size={1}
+                                        icon={<MdArrowForwardIos />}
+                                        iconPosition="right"
+                                        gap={1}
+                                />
+                            </Link>
+                        </Flex>
+                        <Grid columns={1} xs={2} md={4} xl={8} gap={6}>
+                            {recentListens.slice(0, 8).map((listen, index) => (
+                                <Card
+                                    key={index}
+                                    srcImg={listen.song.coverImageUrl}
+                                    title={listen.song.title}
+                                    urlLink={`/song/${listen.song.songId}`}
+                                    LinkComponent={Link}
+                                    description={listen.song.artists.map(artist => artist.artistName).join(", ")}
+                                />
+                            ))}
+                        </Grid>
+                    </Container>
 
-            <Container withShadow={false}>
-                <Flex alignItems="center" justifyContent="between">
-                    <Typography tag="h2">Nghe Gần Đây</Typography>
-                    <Link to="/history">
-                        <Button gd={{ color: "white"}}
-                            text="Tất cả"
-                            theme="transparent"
-                            size={1}
-                            icon={<MdArrowForwardIos />}
-                            iconPosition="right"
-                            gap={1}
-                        />
-                    </Link>
-                </Flex>
-                <Grid columns={1} xs={2} md={4} xl={8} gap={6}>
-                    {recentListens.slice(0, 8).map((listen, index) => (
-                        <Card
-                            key={index}
-                            srcImg={listen.song.coverImageUrl}
-                            title={listen.song.title}
-                            urlLink={`/song/${listen.song.songId}`}
-                            LinkComponent={Link}
-                            description={listen.song.artists.map(artist => artist.artistName).join(", ")}
-                        />
-                    ))}
-                </Grid>
-            </Container>
-
-            <Container withShadow={false}>
-                <Flex alignItems="center" justifyContent="between">
-                    <Typography tag="h2">Gợi Ý Dành Cho Bạn</Typography>
-                    <Link to={"/new-release/songs"} gd={{color: "var(--color-text)"}}>
-                        <Button text="Tất cả" theme="transparent" size={1} icon={<MdArrowForwardIos/>} iconPosition="right"
-                                                                 gap={1} gd={{color: "var(--color-text)"}}/>
-                    </Link>
-                </Flex>
-                <Grid columns={1} md={2} xl={3} gap={6}>
-                    {suggestedSongs && suggestedSongs.map((song, index) => (
-                        <SongCard songList={suggestedSongs} song={song} index={index}/>
-                    ))}
-                </Grid>
-            </Container>
+                    <Container withShadow={false}>
+                        <Flex alignItems="center" justifyContent="between">
+                            <Typography tag="h2">Gợi Ý Dành Cho Bạn</Typography>
+                            <Link to={"/new-release/songs"} gd={{color: "var(--color-text)"}}>
+                                <Button text="Tất cả" theme="transparent" size={1} icon={<MdArrowForwardIos/>} iconPosition="right"
+                                        gap={1} gd={{color: "var(--color-text)"}}/>
+                            </Link>
+                        </Flex>
+                        <Grid columns={1} md={2} xl={3} gap={6}>
+                            {suggestedSongs && suggestedSongs.map((song, index) => (
+                                <SongCard songList={suggestedSongs} song={song} index={index}/>
+                            ))}
+                        </Grid>
+                    </Container>
+                </>
+            )}
 
             <Container withShadow={false}>
                 <Flex alignItems="center" justifyContent="between">
@@ -171,8 +204,8 @@ function HomePage() {
                     </Link>
                 </Flex>
                 <Grid columns={1} sm={2} xl={3} gap={6}>
-                    {suggestedSongs && suggestedSongs.map((song, index) => (
-                        <SongCard songList={suggestedSongs} song={song} index={index}/>
+                    {newReleasedSongs && newReleasedSongs.map((song, index) => (
+                        <SongCard songList={newReleasedSongs} song={song} index={index}/>
                     ))}
                 </Grid>
             </Container>
@@ -186,10 +219,15 @@ function HomePage() {
                     </Link>
                 </Flex>
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
-                    {albums && albums.map((album, index) => (
-                        <AlbumCard album={album} key={index}/>
+                    {songs && songs.map((song, index) => (
+                        <TopSongCard
+                            listenCount={songListenCounts[song.songId] || 0}
+                            songList={songs}
+                            song={song}
+                            key={index} />
                     ))}
                 </Grid>
+
             </Container>
 
         </>

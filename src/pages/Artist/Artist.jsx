@@ -11,7 +11,7 @@ import {HiOutlineDotsHorizontal} from "react-icons/hi";
 import "./Artist.scss";
 import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import wave from "../../assets/gif/icon-playing.gif";
-import ModalSongMenu from "../../components/Modal/ModalSongMenu";
+import ModalSongMenu from "../../components/Modal/ModalMenu/ModalSongMenu";
 import {getArtistById} from "../../core/services/ArtistService";
 
 export function Artist() {

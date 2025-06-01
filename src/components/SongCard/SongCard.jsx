@@ -4,10 +4,12 @@ import "./SongCard.scss";
 import {LiaMicrophoneAltSolid} from "react-icons/lia";
 import {IoIosHeart} from "react-icons/io";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";
-import ModalSongMenu from "../Modal/ModalSongMenu";
+import ModalSongMenu from "../Modal/ModalMenu/ModalSongMenu";
 import wave from "../../assets/gif/icon-playing.gif";
 import {FaPlay} from "react-icons/fa";
 import React, {useEffect, useState} from "react";
+import * as favoriteService from "../../core/services/FavoriteService";
+import {toast} from "react-toastify";
 
 export default function SongCard({songList, song, index}) {
     const {
@@ -20,6 +22,7 @@ export default function SongCard({songList, song, index}) {
         isPlayingSong,
         setAlbumPlaylistId
     } = usePlayMusic();
+
     const [modalSongIndex, setModalSongIndex] = useState(0);
     const [isOpenSongMenu, setIsOpenSongMenu] = useState(false);
 
@@ -51,6 +54,11 @@ export default function SongCard({songList, song, index}) {
         setModalSongIndex(0);
         setIsOpenSongMenu(false);
     }
+    const addNewFavoriteSong = async (song) => {
+        await favoriteService.addFavoriteSong(song);
+        toast.success("Đã cập nhật bài hát yêu thích mới");
+
+    }
 
     return(
         <Flex className={playSongList[songIndexList]?.songId === song.songId && isPlayingSong
@@ -67,27 +75,45 @@ export default function SongCard({songList, song, index}) {
                               <Typography tag={'span'}>, </Typography>}
                       </Typography>
                   ))}
+
                   children={
                       <Flex justifyContent={'end'} alignItems={'center'}>
                           <Button className={'card-icon kara'} theme={'reset'}
-                                  icon={<LiaMicrophoneAltSolid size={18}/>}></Button>
-                          <Button className={`card-icon heart ${song.userFavoriteStatus ? "love" : ""}`} theme={'reset'}
-                                  icon={<IoIosHeart size={18} fill={song.userFavoriteStatus ? "red" : ""}/>}></Button>
-                          <Button className={'card-icon menu'} theme={'reset'}
+                                  icon={<LiaMicrophoneAltSolid size={18}/>}>
+
+                          </Button>
+
+                          <Button className={'card-icon heart'} type={'button'}
+                                  theme={'reset'}
+                                  icon={<IoIosHeart size={22} fill={song.userFavoriteStatus ? "red" : "white"}/>}
+                                  onClick={(e) => {
+                                      e.stopPropagation();
+                                      addNewFavoriteSong(song)
+                                  }}>
+                          </Button>
+
+                          <Button className={'card-icon menu'}
+                                  theme={'reset'}
                                   id={`active-song-menu-${song.songId}`}
                                   onClick={(e) => {
                                       e.stopPropagation();
                                       openSongMenu(song.songId)
                                   }}
-                                  icon={<HiOutlineDotsHorizontal size={18}/>}></Button>
+                                  icon={<HiOutlineDotsHorizontal size={18}/>}>
+                          </Button>
+
                           <Typography className={'duration'} right
-                                      tag="small">{((song.duration) / 60).toFixed(2).replace('.', ':')}</Typography>
+                                      tag="small">{((song.duration) / 60).toFixed(2).replace('.', ':')}
+                          </Typography>
+
+
                           {song.songId === modalSongIndex &&
                               <ModalSongMenu
                                   isOpen={isOpenSongMenu}
                                   onClose={handleCloseSongMenu}
-                                  song={song}
-                              ></ModalSongMenu>
+                                  song={song}>
+
+                              </ModalSongMenu>
                           }
                       </Flex>
                   }
@@ -95,6 +121,8 @@ export default function SongCard({songList, song, index}) {
                   onClick={() => handlePlaySong(index)}
             >
             </Card>
+
+
             <Flex justifyContent={"center"} alignItems={'center'}
                   className={'audio-play'}
                   gd={{width: 60, height: 60, margin: 10}}

@@ -3,6 +3,7 @@ import axiosClient from "../../utils/axiosClient";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
+
 export const getAllPlaylists = async () => {
     try {
         const temp
@@ -29,31 +30,31 @@ export const getAllFavoritePlaylists = async (sort, direction,page,size) => {
     }
 }
 
-export const getAllPlaylist = async (playlistName, page) => {
+export const getAllPlaylistAuth = async (playlistName, page) => {
     try {
-        const temp
-            = await axios.get(`${BASE_URL}/api/public/playlists/getAllWithPage?playlistName=${playlistName}&page=${page-1}`);
-        console.log(temp.data);
+        const temp= await axiosClient.get(`playlists/getAllWithPage?playlistName=${playlistName}&page=${page-1}`);
         return temp.data;
     } catch (e) {
         console.log(e)
         return [];
     }
 }
-export const getAllPlaylistUser = async () => {
+
+export const getAllPlaylistByUserId = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userId = user.userId;
     try {
-        const temp
-            = await axios.get(`${BASE_URL}/api/public/playlists/getAll`);
-        console.log(temp.data);
+        const temp= await axiosClient.get(`playlists/user/${userId}`);
         return temp.data;
     } catch (e) {
         console.log(e)
         return [];
     }
 }
+
 export const savePlaylistAuth = async (data) => {
     try {
-        const response = await axios.post(`${BASE_URL}/api/auth/playlists`, data, {
+        const response = await axiosClient.post(`playlists`, data, {
             params: {
                 userId: data.userId
             }
@@ -65,23 +66,26 @@ export const savePlaylistAuth = async (data) => {
         throw new Error("Không thể thêm mới");
     }
 };
-export const savePlaylistUser = async (data) => {
+
+export const createPlaylistUser = async (data) => {
     try {
-        const response = await axios.post(`${BASE_URL}/api/public/playlists`, data, {
-            params: {
-                userId: data.userId
+        const response = await axiosClient.post(`playlists/create-playlist-user`,
+            data,
+            {
+                params: { userId: data.userId },
             }
-        });
+        );
         return response.data;
-    }
-    catch (e){
+    } catch (e) {
         console.error("Error saving PlaylistUser:", e);
         throw new Error("Không thể thêm mới");
     }
 };
+
+
 export const addSongToPlaylist = async (playlistId, songId) => {
     try {
-        const response = await axios.post(`${BASE_URL}/api/auth/playlists/${playlistId}/add-song/${songId}`);
+        const response = await axiosClient.post(`playlists/${playlistId}/add-song/${songId}`);
         return response.data;
     } catch (e) {
         console.error("Add song error:", e);
@@ -91,17 +95,17 @@ export const addSongToPlaylist = async (playlistId, songId) => {
 
 export const removePlaylistById = async (playlistId) => {
     try {
-        const response = await axios.put(`${BASE_URL}/api/auth/playlists/remove/${playlistId}`);
+        const response = await axiosClient.put(`playlists/remove/${playlistId}`);
         return response.data;
     } catch (error) {
         console.log(error + " error");
         return null;
     }
 };
+
 export const getPlaylistById = async (playlistId) => {
     try {
-        const response = await axios.get(`${BASE_URL}/api/public/playlists/${playlistId}`);
-        console.log(response.data);
+        const response = await axiosClient.get(`playlists/${playlistId}`);
         return response.data;
     } catch (e) {
         console.log(e)
@@ -111,11 +115,25 @@ export const getPlaylistById = async (playlistId) => {
 
 export const updatePlaylist = async (playlist) => {
     try {
-        const response = await axios.put(`${BASE_URL}/api/auth/playlists/update/${playlist.playlistId}`, playlist);
+        const response = await axiosClient.put(`playlists/update/${playlist.playlistId}`, playlist);
+        console.log(response.data);
         return response.data;
     } catch (e) {
         console.log(e)
         return {};
     }
 }
+
+export const getTotalPlaylistListens = async (playlistId) => {
+    try {
+        const response = await axiosClient.get(`playlists/${playlistId}/total-listens`);
+        return response.data;
+    } catch (e) {
+        console.error(e);
+        return 0;
+    }
+};
+
+
+
 

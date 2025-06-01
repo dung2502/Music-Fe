@@ -18,7 +18,6 @@ import {NewRatings} from "../pages/NewRatings/NewRatings";
 import {FavoriteList} from "../pages/Favorite/FavoriteList";
 import NewRelease from "../pages/NewRelease/NewRelease";
 import {PlaylistInformation} from "../pages/Playlist/PlaylistInformation/PlaylistInformation";
-import PlaylistUser from "../pages/Playlist/PlaylistUser";
 import {PlaylistCreate} from "../pages/Dashboard/PlayList/PlaylistCreate";
 import {PlaylistUpdate} from "../pages/Dashboard/PlayList/PlaylistUpdate";
 import {CollaboratorCreate} from "../pages/Dashboard/Collaborator/CollaboratorCreate";
@@ -26,6 +25,15 @@ import Hub from "../pages/Hub/Hub";
 import UserEditInformation from "../pages/UserInformation/UserEditInformation";
 import History from "../pages/History/History";
 import {Song} from "../pages/Song/Song";
+import Vip from "../pages/Vip/Vip";
+import PaymentResult from "../pages/Vip/PaymentResult";
+import Payments from "../pages/Payment/Payments";
+import PlaylistForUser from "../pages/Playlist/PlaylistListForUser";
+import {PlaylistUpdateForUser} from "../pages/Playlist/PlaylistUpdateForUser/PlaylistUpdateForUser";
+import PaymentDashboard from "../pages/Dashboard/Payment/PaymentDashboard";
+
+
+
 
 export const userRoutes = [
   {
@@ -38,12 +46,25 @@ export const userRoutes = [
     component: <History />,
   },
   {
+    path: '/payment/result',
+    component: <PaymentResult />
+  },
+  {
     path: '/m-chart',
     component: <MChart />,
   },
   {
+    path: '/vip',
+    component: <Vip />,
+    private: true,
+  },
+  {
     path: '/m-chart-week/:national',
     component: <TopWeek />,
+  },
+  {
+    path: '/playlists',
+    component: <PlaylistForUser />,
   },
   {
     path: '/new-songs-ratings',
@@ -56,6 +77,10 @@ export const userRoutes = [
   {
     path: '/albums/:id',
     component: <Album/>,
+  },
+  {
+    path: '/playlist-update-for-user/:id',
+    component: <PlaylistUpdateForUser/>,
   },
   {
     path: '/song/:id',
@@ -79,12 +104,12 @@ export const userRoutes = [
     component: <NewRelease />,
   },
   {
-    path: '/playlist',
-    component: <PlaylistUser/>,
-  },
-  {
     path: '/playlist/:id',
     component: <PlaylistInformation/>,
+  },
+  {
+    path: '/payments',
+    component: <Payments/>,
   },
   {
     path: '*',
@@ -176,6 +201,11 @@ export const adminRoutes = [
   {
     path: '/dashboard/playlist-update/:id',
     component: <PlaylistUpdate />,
+    private: true,
+  },
+  {
+    path: '/dashboard/payments',
+    component: <PaymentDashboard />,
     private: true,
   },
   {

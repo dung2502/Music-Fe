@@ -2,21 +2,28 @@ import axios from 'axios';
 import {toast} from "react-toastify";
 
 const apiUrl = process.env.REACT_APP_API_URL;
+
 const axiosClient = axios.create({
   baseURL: `${apiUrl}/api/auth`,
     withCredentials: true,
 });
 
 axiosClient.interceptors.request.use(
-  (config) => {
-      config.headers.Authorization = `Bearer`;
-      config.headers.userId = JSON.parse(localStorage.getItem("user")).userId;
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+    (config) => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user && user.token) {
+            config.headers.Authorization = `Bearer ${user.token}`;
+        }
+        config.headers.userId = user?.userId;
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
 );
+
+
+
 axiosClient.interceptors.response.use(
   (response) => {
     return response;

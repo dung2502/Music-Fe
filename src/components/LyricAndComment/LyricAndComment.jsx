@@ -21,6 +21,7 @@ export function LyricAndComment({showLyrics}) {
     const [activeButton, setActiveButton] = useState(1);
     const [unmountLyrics, setUnmountLyrics] = useState(false)
 
+
     useEffect(() => {
         setIsShowLyrics(showLyrics);
     }, [showLyrics]);
@@ -42,6 +43,7 @@ export function LyricAndComment({showLyrics}) {
     const handleCloseComment = () => {
         setIsShowComment(!isShowComment);
     }
+
 
     return (
         <Modal isOpen={isShowLyrics} onClose={handleUnmountShowLyrics} position="full"

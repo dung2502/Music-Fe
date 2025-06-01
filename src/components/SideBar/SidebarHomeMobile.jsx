@@ -29,7 +29,7 @@ export const SidebarHomeMobile = ({ isOpen, onClose, openPlaylistModal, openSele
                 <Nav listNav={navigationHomeItems1} LinkComponent={Link} className="" activeClass="active-class" overflow={false} />
                 <Typography className="hr-top"></Typography>
                 <Nav listNav={navigationHomeItems2} LinkComponent={Link} className="" activeClass="active-class" />
-                <Button theme={"reset"} text={"Thêm mới Playlist"}
+                <Button theme={"reset"} text={"Thêm mới PlaylistListForUser"}
                         onClick={(e) => {
                             e.stopPropagation();
                             handleOpenPlaylistModal();

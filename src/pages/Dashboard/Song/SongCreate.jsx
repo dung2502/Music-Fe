@@ -18,7 +18,7 @@ import {useForm} from "react-hook-form"
 import {useNavigate, useParams} from "react-router-dom";
 import {IoArrowBackSharp} from "react-icons/io5";
 import {IoMdAdd} from "react-icons/io";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import * as genreService from "../../../core/services/GenreService";
 import * as artistService from "../../../core/services/ArtistService";
 import * as albumService from "../../../core/services/AlbumService";
@@ -141,6 +141,11 @@ function SongCreate() {
         data.coverImageUrl = coverImageUrl;
         data.songUrl = mp3Url;
 
+        if (!coverImageUrl || !mp3Url || addArtists.length === 0 || addGenres.length === 0 || !genres) {
+            toast.warn("Vui lòng điền đầy đủ thông tin!");
+            return;
+        }
+
         if (data.album === '') {
             data.album = null;
         } else {
@@ -155,7 +160,6 @@ function SongCreate() {
                 const savedSong = await songService.saveSong(data);
                 toast.success("Thêm mới bài hát thành công!");
 
-                // Gửi bài hát qua WebSocket tới backend để tạo thông báo
                 const socket = new SockJS(`${BASE_URL}/ws`);
                 const stompClient = over(socket);
                 stompClient.connect({}, () => {
@@ -164,10 +168,10 @@ function SongCreate() {
             }
         } catch (e) {
             setValidateError(e.errorMessage);
-            if (validateError) return toast.warn("Kiểm tra lại việc nhập!");
-            toast.error("Thêm mới thất bại!");
+            toast.error("Thêm mới thất bại! Kiểm tra lại dữ liệu.");
         }
     }
+
 
     const handleAddGenre = (event) => {
         if (event.target.value === "") {
@@ -197,15 +201,18 @@ function SongCreate() {
             <Group className='overflow-hidden'>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                     <Grid md={2} gap={4}>
+
                         <Label>
                             <Typography>Tên bài hát</Typography>
                             <Input size={4} placeholder="Tên bài hát"
                                    {...register("title", {
-                                       //    required: "Không được để trống!"
+                                       required: "Không được để trống!"
                                    })}
                             />
+                            <ErrorMessage condition={errors.title} message={errors.title?.message} />
                             <ErrorMessage condition={validateError} message={validateError?.title}/>
                         </Label>
+
                         <Label>
                             <Typography>Nghệ sĩ thực hiện</Typography>
                             <Flex>
@@ -216,8 +223,10 @@ function SongCreate() {
                                                 value={JSON.stringify(artist)} text={artist.artistName}></Option>
                                     ))}
                                 </Select>
-                                <ErrorMessage />
+                                <ErrorMessage condition={!addArtists} message="Thể loại là bắt buộc!" />
+                                <ErrorMessage condition={validateError} message={validateError?.artist} />
                             </Flex>
+
                             <Flex justifyContent={'space-between'} alignItems="center" gd={{width: '100%', flexWrap: 'wrap'}}>
                                 {addArtists && addArtists.map((artist, index) => (
                                     <Flex justifyContent="start" alignItems="center" key={artist.artistId}
@@ -247,13 +256,15 @@ function SongCreate() {
                                 ))}
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Hình ảnh bìa</Typography>
                             <Flex>
                                 <UploadOneImage className='form-label-child'
                                                 onImageUrlChange={(url) => handleOneImageUrlChange(url)}/>
                             </Flex>
-                            <ErrorMessage condition={validateError} message={validateError?.coverImageUrl}/>
+                            <ErrorMessage condition={!coverImageUrl} message="Hình ảnh bìa là bắt buộc!" />
+                            <ErrorMessage condition={validateError} message={validateError?.coverImageUrl} />
                             <Flex justifyContent={'space-between'} alignItems="center" flexWrap="wrap">
                                 {coverImageUrl &&
                                     <Flex justifyContent="start" alignItems="center"
@@ -283,6 +294,7 @@ function SongCreate() {
                                 }
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Thể loại</Typography>
                             <Flex>
@@ -293,8 +305,10 @@ function SongCreate() {
                                                 value={JSON.stringify(genre)} text={genre.genreName}></Option>
                                     ))}
                                 </Select>
-                                <ErrorMessage />
+                                <ErrorMessage condition={!genres} message="Thể loại là bắt buộc!" />
+                                <ErrorMessage condition={validateError} message={validateError?.genre} />
                             </Flex>
+
                             <Flex justifyContent={'space-between'} alignItems="center" gd={{width: '100%', flexWrap: 'wrap'}}>
                                 {addGenres && addGenres.map((genre, index) => (
                                     <Flex justifyContent="start" alignItems="center" key={genre.genreId}
@@ -325,13 +339,15 @@ function SongCreate() {
                                 ))}
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Bài hát</Typography>
                             <Flex>
                                 <UploadMp3 className='form-label-child'
                                            onMp3UrlChange={(url) => handleOneMp3UrlChange(url)}/>
                             </Flex>
-                            <ErrorMessage condition={validateError} message={validateError?.songUrl}/>
+                            <ErrorMessage condition={!mp3Url} message="File MP3 là bắt buộc!" />
+                            <ErrorMessage condition={validateError} message={validateError?.songUrl} />
                             <Flex justifyContent={'space-between'} alignItems="center" gd={{width: '100%', flexWrap: 'wrap'}}>
                                 {mp3Url &&
                                     <Flex justifyContent="start" alignItems="center" key={genre.genreId}
@@ -359,19 +375,35 @@ function SongCreate() {
                                 }
                             </Flex>
                         </Label>
+
                         <Label>
                             <Typography>Thời lượng</Typography>
                             <Input size={4} placeholder="Thời lượng bài hát" type="number"
                                    {...register("duration", {
-                                       //    required: "Không được để trống!"
+                                       required: "Không được để trống!",
+                                       valueAsNumber: true,
+                                       min: {
+                                           value: 1,
+                                           message: "Thời lượng phải lớn hơn 0"
+                                       },
+                                       max:{
+                                           value: 1200,
+                                           message: "Thời lượng tối đa là 1200 giây"
+                                       }
                                    })}
                             />
+                            <ErrorMessage condition={errors.duration} message={errors.duration?.message} />
+                            <ErrorMessage condition={validateError} message={validateError?.duration}/>
                             <ErrorMessage />
                         </Label>
+
                         <Label>
                             <Typography>Lời bài hát</Typography>
                             <Editor value={lyrics} onChange={handleChangeLyrics}/>
+                            <ErrorMessage condition={errors} message={errors?.lyrics?.message} />
+                            <ErrorMessage condition={validateError} message={validateError?.lyrics} />
                         </Label>
+
                         <Label>
                             <Typography>Album</Typography>
                             <Select size={4} {...register("album")}>
@@ -383,6 +415,7 @@ function SongCreate() {
                             </Select>
                             <ErrorMessage />
                         </Label>
+
                     </Grid>
                     <Flex className="form-btn-mt">
                         <Button type="submit" text="Thêm mới" size={4} icon={<IoMdAdd />} gap={1}/>

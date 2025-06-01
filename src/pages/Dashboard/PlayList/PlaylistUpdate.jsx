@@ -1,5 +1,5 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import * as PlaylistService from "../../../core/services/PlayListService";
 import {toast} from "react-toastify";
@@ -32,6 +32,8 @@ export function PlaylistUpdate() {
     const navigate = useNavigate();
     const [songs, setSongs] = useState([]);
     const [addSongs, setAddSongs] = useState([]);
+    const [validateError, setValidateError] = useState({});
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -48,6 +50,15 @@ export function PlaylistUpdate() {
         }
         fetchData();
     }, [id])
+
+    useEffect(() => {
+        if (playlist?.playListSongs) {
+            setAddSongs(playlist.playListSongs.map(pls => ({
+                ...pls.song,
+                id: pls.id
+            })));
+        }
+    }, [playlist]);
 
     const getPlaylistById = async (playlistId) => {
         const temp = await PlaylistService.getPlaylistById(playlistId);
@@ -72,46 +83,47 @@ export function PlaylistUpdate() {
         setSongs(temp)
     }
 
-    const handleAddSongs = async (event) => {
-        if (!event.target.value) return;
-
-        const song = JSON.parse(event.target.value);
-        if (addSongs.some(s => s.songId === song.songId)) {
-            toast.info(`Bài hát "${song.title}" đã có trong playlist!`);
+    const handleAddSongs = (event) => {
+        if (event.target.value === "") {
             return;
         }
-
-        try {
-            await PlaylistService.addSongToPlaylist(id, song.songId); // Gọi API BE
-            setAddSongs(prev => [...prev, song]); // Cập nhật UI
-            toast.success(`Đã thêm "${song.title}" vào playlist.`);
-        } catch (e) {
-            toast.error("Thêm bài hát thất bại.");
+        const song = JSON.parse(event.target.value);
+        if (!addSongs.some(s => s.title === song.title)) {
+            setAddSongs(prevSongs => [...prevSongs, song]);
         }
-    };
-
-
+    }
 
     const handlePopSong = (song) => {
         const parsedSong = JSON.parse(song);
-        setAddSongs(prevSongs => prevSongs.filter(s => s.title !== parsedSong.title));
-    }
+        setAddSongs(prevSongs => prevSongs.filter(s => s.songId !== parsedSong.songId));
+    };
+
 
     const onSubmit = async (data) => {
         try {
             data.coverImageUrl = coverImageUrl;
-            const updateData = {
-                playlistId: data.playlistId,
-                playlistName: data.playlistName,
-                description: data.description,
-                coverImageUrl: data.coverImageUrl,
-            };
-            await PlaylistService.updatePlaylist(updateData);
+
+            data.playListSongs = addSongs.map(song => ({
+                id: song.id,
+                song: {
+                    songId: song.songId
+                }
+            }));
+
+            console.log("send BE:", data);
+            await PlaylistService.updatePlaylist(data);
             toast.success("Cập nhật playlist thành công!");
         } catch (error) {
-            toast.error("Cập nhật thất bại!");
+            if (error.errorMessage && typeof error.errorMessage === "object") {
+                setValidateError(error.errorMessage);
+                toast.warn("Kiểm tra lại việc nhập!");
+            } else {
+                toast.error("Thao tác thất bại!");
+            }
         }
     };
+
+
 
 
     const handleOneImageUrlChange = async (uploadedImageUrl) => {
@@ -136,11 +148,18 @@ export function PlaylistUpdate() {
                             <Typography>Tên album</Typography>
                             <Input size={4} placeholder="Tên playlist"
                                    {...register("playlistName", {
-                                       required: "Không được để trống!"
+                                       required: "Tên playlist không được để trống!",
+                                       maxLength: {
+                                           value: 100,
+                                           message: "Tên playlist không được vượt quá 100 ký tự!"
+                                       }
                                    })}
                             />
-                            <ErrorMessage />
+
+                            <ErrorMessage condition={errors?.playlistName} message={errors.playlistName?.message} />
+                            <ErrorMessage condition={validateError?.playlistName} message={validateError.playlistName} />
                         </Label>
+
                         <Label>
                             <Typography>Danh sách bài hát</Typography>
                             <Flex>
@@ -151,8 +170,8 @@ export function PlaylistUpdate() {
                                                 text={song.title}></Option>
                                     ))}
                                 </Select>
-                                <ErrorMessage />
                             </Flex>
+                            <ErrorMessage condition={validateError} message={validateError?.songs}/>
                             <div>
                                 {addSongs && addSongs.map((song, index) => (
                                     <>
@@ -183,11 +202,17 @@ export function PlaylistUpdate() {
                                 ))}
                             </div>
                         </Label>
+
+
                         <Label>
                             <Typography>Hình ảnh bìa</Typography>
                             <Flex>
                                 <UploadOneImage className='form-label-child'
-                                                onImageUrlChange={(url) => handleOneImageUrlChange(url)}/>
+                                                onImageUrlChange={(url) => handleOneImageUrlChange(url)}
+                                />
+                                {!coverImageUrl && (
+                                    <Typography color="red">Ảnh bìa không được để trống!</Typography>
+                                )}
                                 <ErrorMessage />
                             </Flex>
                             <Flex justifyContent={'space-between'} alignItems="center" gd={{width: '100%', flexWrap: 'wrap'}}>
@@ -223,10 +248,15 @@ export function PlaylistUpdate() {
                             <Typography>Chú Thích</Typography>
                             <Input size={4} placeholder="Chú thích"
                                    {...register("description", {
-                                       required: "Không được để trống!"
+                                       maxLength: {
+                                           value: 1000,
+                                           message: "Mô tả không được vượt quá 1000 ký tự!"
+                                       }
                                    })}
                             />
-                            <ErrorMessage />
+
+                            <ErrorMessage condition={errors?.description} message={errors.description?.message} />
+                            <ErrorMessage condition={validateError?.description} message={validateError.description} />
                         </Label>
                     </Grid>
                     <Flex className="form-btn-mt">

@@ -40,7 +40,6 @@ export const getAllEmployee = async (searchContent, page) => {
 export const getUserById = async (userId) => {
     try {
         const temp = await axiosClient.get(`/users/${userId}`);
-        console.log(temp.data)
         return temp.data;
     } catch (e) {
         console.log(e)
@@ -60,13 +59,11 @@ export const saveUser = async (employee) => {
 
 export const updateUser = async (user) => {
     const token = localStorage.getItem('token');
-    return axiosInstance.put(
-        `http://localhost:8080/api/auth/users/${user.userId}`,
-        user,
-        {
+    return axiosInstance.put(`/users/update/${user.userId}`,
+        user,{
             headers: {
                 Authorization: `Bearer ${token}`
-            }
+            },
         }
     );
 };

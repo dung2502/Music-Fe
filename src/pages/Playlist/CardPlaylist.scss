@@ -1,0 +1,66 @@
+.playlist-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); // 6 cột
+  gap: 1rem;
+  padding: 1rem;
+
+  .albumCard {
+    width: 100%;
+  }
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(4, 1fr); // Responsive trên màn nhỏ hơn
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr); // Tablet
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; // Mobile
+  }
+}
+
+.albumCard {
+  position: relative;
+
+  a {
+    &:hover {
+      color: #da0496;
+    }
+  }
+
+  .action-menu {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    aspect-ratio: 1;
+    display: none;
+
+    .card-icon {
+      border-radius: 50%;
+      padding: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &:hover {
+        background-color: var(--bg-content-hover);
+      }
+
+      &.play {
+        border: 1px solid #fff !important;
+      }
+    }
+  }
+
+  &:hover,
+  &.active {
+    .action-menu {
+      display: flex;
+      background-color: var(--bg-content);
+      border-radius: 5px;
+    }
+  }
+}

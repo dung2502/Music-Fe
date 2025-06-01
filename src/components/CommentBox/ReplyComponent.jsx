@@ -5,6 +5,8 @@ import love from "../../assets/gif/love.gif";
 import haha from "../../assets/gif/haha.gif";
 import wow from "../../assets/gif/wow.gif";
 import dislike from "../../assets/gif/dislike.gif";
+import { useState } from "react";
+import { ModalDeleteComment } from "../Modal/ModalDeleteComment/ModalDeleteComment";
 
 export function ReplyComponent(
     {
@@ -26,9 +28,28 @@ export function ReplyComponent(
         commentIndex,
         timeAgo,
         userHasEmotion,
-        handleRemoveEmotionComment
+        handleRemoveEmotionComment,
+        openDeleteModal
     }
 ) {
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [commentToDelete, setCommentToDelete] = useState(null);
+
+    const handleOpenDeleteModal = (commentId) => {
+        setCommentToDelete(commentId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setCommentToDelete(null);
+        setIsDeleteModalOpen(false);
+    };
+
+    const handleConfirmDelete = () => {
+        openDeleteModal(commentToDelete);
+        handleCloseDeleteModal();
+    };
+
     const userEmotion = userHasEmotion(comment);
     return (
         <>
@@ -103,6 +124,15 @@ export function ReplyComponent(
                         <Button theme="reset" gd={{padding: '0 10px', width: '20%'}}
                                 text={<Typography tag={'span'} gd={{fontSize: '.6rem'}}>Phản hồi</Typography>}
                                 onClick={() => handleOpenReplyBox(comment.commentId)}/>
+                        {comment.user?.userId === userId && (
+                            <Button
+                                theme="reset"
+                                gd={{padding: '0 10px', width: '20%'}}
+                                text={<Typography tag="span" gd={{fontSize: '.6rem', color: 'red'}}>Gỡ</Typography>}
+                                onClick={() => handleOpenDeleteModal(comment.commentId)}
+                            />
+                        )}
+
                         <Flex justifyContent={'start'} gap={1} alignItems={"center"} gd={{width: "45%"}}>
                             {
                                 comment.likes &&
@@ -181,6 +211,7 @@ export function ReplyComponent(
                             timeAgo={timeAgo}
                             userHasEmotion={userHasEmotion}
                             handleRemoveEmotionComment={handleRemoveEmotionComment}
+                            openDeleteModal={openDeleteModal}
                         />
                     ))}
                 </div>
@@ -228,6 +259,12 @@ export function ReplyComponent(
                     }} text={"Đăng tải"}></Button>
                 </Form>
             }
+
+            <ModalDeleteComment 
+                isOpen={isDeleteModalOpen}
+                onClose={handleCloseDeleteModal}
+                onConfirm={handleConfirmDelete}
+            />
         </>
     );
 }

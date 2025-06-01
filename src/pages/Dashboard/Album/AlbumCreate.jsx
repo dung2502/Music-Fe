@@ -93,7 +93,16 @@ export function AlbumCreate() {
 
 
     const onSubmit = async (data) => {
-        if (addArtists.length < 1 || addGenres.length < 1 || !coverImageUrl) {
+        if (!coverImageUrl) {
+            toast.error("Ảnh bìa không được để trống!");
+            return;
+        }
+        if (addArtists.length < 1) {
+            toast.error("Phải chọn ít nhất một nghệ sĩ!");
+            return;
+        }
+        if (addGenres.length < 1) {
+            toast.error("Phải chọn ít nhất một thể loại!");
             return;
         }
 
@@ -180,9 +189,14 @@ export function AlbumCreate() {
                             <Typography>Tên album</Typography>
                             <Input size={4} placeholder="Tên album"
                                    {...register("title", {
-                                       required: "Không được để trống!"
+                                       required: "Không được để trống!",
+                                       maxLength: {
+                                           value: 100,
+                                           message: "Không được vượt quá 100 ký tự!"
+                                       }
                                    })}
                             />
+
                             <ErrorMessage condition={errors} message={errors?.title?.message} />
                             <ErrorMessage condition={validateError} message={validateError?.title}/>
                         </Label>
@@ -309,9 +323,14 @@ export function AlbumCreate() {
                             <Typography>Cung cấp bởi </Typography>
                             <Input size={4} placeholder="Bản quyền"
                                    {...register("provide", {
-                                       required: "Không được để trống!"
+                                       required: "Không được để trống!",
+                                       maxLength: {
+                                           value: 100,
+                                           message: "Không được vượt quá 100 ký tự!"
+                                       }
                                    })}
                             />
+
                             <ErrorMessage condition={errors} message={errors?.title?.message} />
                             <ErrorMessage condition={validateError} message={validateError?.provide}/>
                         </Label>
