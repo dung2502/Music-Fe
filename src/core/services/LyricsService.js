@@ -1,8 +1,9 @@
 import axios from "axios";
 
+const BASE_URL = process.env.REACT_APP_API_URL;
 export const getLyricJsonBySongId = async (songId) => {
     try {
-        const response = await axios.post(`http://localhost:8080/api/public/lyrics-timing/lyric-json/${songId}`);
+        const response = await axios.post(`${BASE_URL}/api/public/lyrics-timing/lyric-json/${songId}`);
         console.log(response);
         return  response;
     } catch (error) {
