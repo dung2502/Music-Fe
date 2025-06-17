@@ -5,6 +5,11 @@ import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import * as albumService from "../../core/services/AlbumService";
 import "./Album.css";
+import * as authenticationService from "../../core/services/AuthenticationService";
+import * as favoriteService from "../../core/services/FavoriteService";
+import {toast} from "react-toastify";
+import {IoIosHeart} from "react-icons/io";
+import {FiUserPlus} from "react-icons/fi";
 
 export function Album() {
     const {
@@ -17,6 +22,10 @@ export function Album() {
     } = usePlayMusic();
     const {id} = useParams();
     const [album, setAlbum] = useState({});
+    const [isFavorited, setIsFavorited] = useState(false);
+    const isAuthenticated = authenticationService.isAuthenticated();
+    const [favoriteAlbums, setFavoriteAlbums] = useState([]);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,6 +33,61 @@ export function Album() {
         };
         fetchData();
     }, [id]);
+
+    useEffect(() => {
+        if (album) {
+            setIsFavorited(album.userFavoriteStatus || false);
+        }
+    }, [album]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await getFavoriteAlbumList('','DESC',0,100)
+        }
+        fetchData().then().catch(console.error);
+    }, []);
+
+    const getFavoriteAlbumList = async (sort, direction,page,size) => {
+        const temp = await albumService.getAllFavoriteAlbums(sort, direction,page,size);
+        setFavoriteAlbums(temp.content);
+    }
+    useEffect(() => {
+        if (favoriteAlbums && album.albumId) {
+            const isFav = favoriteAlbums.some(favAlbum => favAlbum.albumId === album.albumId);
+            setIsFavorited(isFav);
+        }
+    }, [favoriteAlbums, album]);
+
+    const addNewFavoriteAlbum = async (album) => {
+        console.log(album);
+        try {
+            const response = await favoriteService.addFavoriteAlbum(album);
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error(error);
+        }
+    }
+
+    const deleteFavoriteAlbum = async (album) => {
+        try {
+            const response = await favoriteService.deleteFavoriteAlbum(album);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
+    }
 
     const getAlbumById = async (id) => {
         const temp = await albumService.getAlbumById(id);
@@ -92,6 +156,7 @@ export function Album() {
                               <Group>
                                   <Typography tag={"h1"}>{album.title}</Typography>
                                   <Flex center>
+                                      <Group>
                                       <Typography>Nghệ sĩ:</Typography>
                                       <Typography>
                                           {album.artists?.map((artist, index) => (
@@ -100,10 +165,28 @@ export function Album() {
                                               </a>
                                           ))}
                                       </Typography>
+                                      </Group>
                                   </Flex>
+                                  {/*Sua du lieu chuan*/}
                                   <Typography>100 người yêu thích</Typography>
                                   <Flex center>
                                       <Button onClick={handlePlayAlbum} text={'Phát ngẫu nhiên'}></Button>
+                                  </Flex>
+                                  <Flex center>
+                                      {isAuthenticated && (
+                                          <Button
+                                              className={`favorite-button ${isFavorited ? 'favorited' : ''}`}
+                                              icon={<FiUserPlus size={18}/>}
+                                              text={isFavorited ? 'Đã quan tâm' : 'Quan tâm'}
+                                              onClick={(e) => {
+                                                  if (isFavorited) {
+                                                      deleteFavoriteAlbum(album);
+                                                  } else {
+                                                      addNewFavoriteAlbum(album);
+                                                  }
+                                              }}
+                                          />
+                                      )}
                                   </Flex>
                               </Group>
                           }
@@ -121,9 +204,9 @@ export function Album() {
 
             <Group>
                 <Typography tag={"h2"}>Nghệ sĩ tham gia</Typography>
-                <Grid columns={2} xs={2} sm={3} md={3} lg={5}>
+                <Grid className="circle" columns={2} xs={2} sm={3} md={3} lg={5}>
                     {album.artists && album.artists.map(artist => (
-                        <Card key={artist} shape="circle" srcImg={artist.avatar}
+                        <Card className="card-circle" key={artist} shape="circle" srcImg={artist.avatar}
                               urlLink={`/artists/${artist.artistId}`}
                               LinkComponent={Link}
                               alt={artist.artistName} title={artist.artistName}/>

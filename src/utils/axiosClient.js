@@ -31,11 +31,6 @@ axiosClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       console.error('Lỗi 401: Unauthorized');
-      // localStorage.removeItem('user');
-      // toast.warning("Đã hết phiên đăng nhập");
-      // setTimeout(() => {
-      //   window.location.href = '/login';
-      // }, 3000);
     }else if(error.code === "ERR_NETWORK"){
       toast.error("Máy chủ đang gặp sự cố !");
     }

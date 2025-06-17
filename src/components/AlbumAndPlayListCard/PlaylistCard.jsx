@@ -1,7 +1,7 @@
 import { Button, Card, Flex, Typography } from "lvq";
 import { Link } from "react-router-dom";
 import { IoIosHeart } from "react-icons/io";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import "./Card.scss";
 import wave from "../../assets/gif/icon-playing.gif";
 import { FaPlay } from "react-icons/fa";
@@ -21,11 +21,43 @@ export default function PlaylistCard({ playlist, listenCount }) {
         isPlayingSong,
         setAlbumPlaylistId
     } = usePlayMusic();
+    const [isFavorited, setIsFavorited] = useState(false);
+    
+    useEffect(() => {
+        if (playlist) {
+            setIsFavorited(playlist.userFavoriteStatus || false);
+        }
+    }, [playlist]);
 
     const addNewFavoritePlaylist = async (playlist) => {
-        await favoriteService.addFavoritePlaylist(playlist);
-        toast.success("Đã cập nhật playlist yêu thích mới");
+        try {
+            const response = await favoriteService.addFavoritePlaylist(playlist);
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error(error);
+        }
     };
+
+    const deleteFavoritePlaylist = async (playlist) => {
+        try {
+            const response = await favoriteService.deleteFavoritePlaylist(playlist);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
+    }
 
     const handlePlayPlaylist = (index) => {
         if (
@@ -74,10 +106,16 @@ export default function PlaylistCard({ playlist, listenCount }) {
                     icon={
                         <IoIosHeart
                             size={22}
-                            fill={playlist.userFavoriteStatus ? "red" : "white"}
+                            fill={isFavorited ? "red" : "white"}
                         />
                     }
-                    onClick={(e) => addNewFavoritePlaylist(playlist)}
+                    onClick={(e) => {
+                        if (isFavorited) {
+                            deleteFavoritePlaylist(playlist);
+                        } else {
+                            addNewFavoritePlaylist(playlist);
+                        }
+                    }}
                 />
                 {albumOrPlaylistId === playlist.playlistId ? (
                     <Button

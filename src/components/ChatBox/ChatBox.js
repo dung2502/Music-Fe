@@ -14,7 +14,6 @@ export function ChatBox({ openChat, callCloseChat, messages = [] }) {
     }, [openChat]);
 
     useEffect(() => {
-        // Chỉ update khi messages mới khác messages cũ
         setChatMessages(prev => {
             if (messages.length > prev.length) return messages;
             return prev;

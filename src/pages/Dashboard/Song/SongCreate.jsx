@@ -28,6 +28,7 @@ import {UploadMp3} from "../../../firebase/UploadMp3";
 import * as songService from "../../../core/services/SongService";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
+import {getSongByIdAuth} from "../../../core/services/SongService";
 
 function SongCreate() {
     const navigate = useNavigate();
@@ -66,7 +67,7 @@ function SongCreate() {
     }, [id])
 
     const getSongById = async (songId) => {
-        const temp = await songService.getSongById(songId);
+        const temp = await songService.getSongByIdAuth(songId);
         if (temp) {
             setSong(temp);
             setValue("songId", temp.songId);
@@ -135,6 +136,7 @@ function SongCreate() {
     }
 
     const onSubmit = async (data) => {
+        console.log(data);
         data.genres = addGenres;
         data.artists = addArtists;
         data.lyrics = lyrics;
@@ -168,6 +170,7 @@ function SongCreate() {
             }
         } catch (e) {
             setValidateError(e.errorMessage);
+            console.log(e.errorMessage);
             toast.error("Thêm mới thất bại! Kiểm tra lại dữ liệu.");
         }
     }
@@ -418,7 +421,7 @@ function SongCreate() {
 
                     </Grid>
                     <Flex className="form-btn-mt">
-                        <Button type="submit" text="Thêm mới" size={4} icon={<IoMdAdd />} gap={1}/>
+                        <Button type="submit" text={id !== undefined ? "Sửa đổi" : "Thêm mới"} size={4} icon={<IoMdAdd />} gap={1}/>
                     </Flex>
                 </Form>
             </Group>

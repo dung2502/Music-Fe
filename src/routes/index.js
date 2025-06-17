@@ -1,7 +1,6 @@
 import Dashboard from "../pages/Dashboard/Dashboard";
 import HomePage from "../pages/Home/HomePage";
 import MChart from "../pages/MChart/MChart";
-import NotFound from "../pages/NotFound/NotFound";
 import AlbumsList from "../pages/Dashboard/Album/AlbumsList";
 import CollaboratorList from "../pages/Dashboard/Collaborator/CollaboratorList";
 import PlayList from "../pages/Dashboard/PlayList/PlayList";
@@ -31,6 +30,8 @@ import Payments from "../pages/Payment/Payments";
 import PlaylistForUser from "../pages/Playlist/PlaylistListForUser";
 import {PlaylistUpdateForUser} from "../pages/Playlist/PlaylistUpdateForUser/PlaylistUpdateForUser";
 import PaymentDashboard from "../pages/Dashboard/Payment/PaymentDashboard";
+import ChangePassword from "../pages/UserInformation/ChangePassword";
+import ChatBoxForHelpUser from "../components/ChatBoxForHelpUser/ChatBoxForHelpUser";
 
 
 
@@ -46,7 +47,7 @@ export const userRoutes = [
     component: <History />,
   },
   {
-    path: '/payment/result',
+    path: '/payments/result',
     component: <PaymentResult />
   },
   {
@@ -112,12 +113,13 @@ export const userRoutes = [
     component: <Payments/>,
   },
   {
-    path: '*',
-    component: <NotFound />,
-  },
-  {
     path: '/edit-user-information',
     component: <UserEditInformation/>,
+    private: true,
+  },
+  {
+    path: '/change-password',
+    component: <ChangePassword/>,
     private: true,
   },
 ];
@@ -207,9 +209,5 @@ export const adminRoutes = [
     path: '/dashboard/payments',
     component: <PaymentDashboard />,
     private: true,
-  },
-  {
-    path: '*',
-    component: <NotFound />,
-  },
+  }
 ];

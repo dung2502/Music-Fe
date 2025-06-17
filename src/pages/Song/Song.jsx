@@ -5,6 +5,12 @@ import React, { useEffect, useState } from "react";
 import * as songService from "../../core/services/SongService";
 import "./Song.scss";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from 'recharts';
+import * as favoriteService from "../../core/services/FavoriteService";
+import {toast} from "react-toastify";
+import {FiUserPlus} from "react-icons/fi";
+import {add} from "react-modal/lib/helpers/classList";
+import * as authenticationService from "../../core/services/AuthenticationService";
+import {IoIosHeart, IoIosHeartEmpty} from "react-icons/io";
 
 export function Song() {
     const {
@@ -17,6 +23,21 @@ export function Song() {
     } = usePlayMusic();
     const { id } = useParams();
     const [song, setSong] = useState({});
+    const [totalFavSong, setTotalFavSong] = useState({});
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [favoriteSongs, setFavoriteSongs] = useState([]);
+    
+
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
+        if (song) {
+            setIsFavorited(song.userFavoriteStatus || false);
+        }
+    }, [song]);
 
     const chartData = song.songListens?.map(item => ({
         date: new Date(item.dateCreate).toLocaleDateString('vi-VN'),
@@ -31,10 +52,75 @@ export function Song() {
         fetchData();
     }, [id]);
 
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await getTotalFavSong(id);
+        };
+        fetchData();
+    }, [id]);
+
+
+
     const getSongById = async (id) => {
         const temp = await songService.getSongById(id);
         setSong(temp);
     };
+
+    const getTotalFavSong = async (songId) => {
+        let temp = await  songService.getTotalFavSongBySongId(songId)
+        setTotalFavSong(temp);
+    }
+
+    const getFavoriteSongsList = async (sort, direction,page,size) => {
+        const temp = await songService.getAllFavoriteSongs(sort, direction,page,size);
+        setFavoriteSongs(temp.content);
+    }
+    useEffect(() => {
+        const fetchData = async () => {
+            await getFavoriteSongsList('','DESC',0,100)
+        }
+        fetchData().then().catch(console.error);
+    }, []);
+    
+    useEffect(() => {
+        if (favoriteSongs && song.songId) {
+            const isFav = favoriteSongs.some(favSong => favSong.songId === song.songId);
+            setIsFavorited(isFav);
+        }
+    }, [favoriteSongs, song]);
+
+    const addNewFavoriteSongById = async (song) => {
+        console.log(song.songId);
+        try {
+            const response = await favoriteService.addFavoriteSongBySongId(song.songId);
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error("Lỗi khi thêm yêu thích:", error);
+        }
+    };
+
+
+    const deleteFavoriteSong = async (song) => {
+        try {
+            const response = await favoriteService.deleteFavoriteSong(song);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
+    }
 
     const handlePlaySong = () => {
         addSongList([song]);
@@ -46,7 +132,7 @@ export function Song() {
         <Container withShadow={false} className="song-container">
             <Grid columns={2}>
                 <Flex className="song-main" gap={24} wrap>
-                    <Card className="song-image" srcImg={song.coverImageUrl} />
+                    <Card className="song-picture" srcImg={song.coverImageUrl} />
                     <Group className="song-details">
                         <Typography tag="h1" className="song-title">{song.title}</Typography>
                         <Typography className="song-artist">
@@ -58,11 +144,25 @@ export function Song() {
                         </Typography>
                         <Typography className="song-duration">Thời lượng: {((song.duration) / 60).toFixed(2).replace('.', ':')}</Typography>
                         <Button onClick={handlePlaySong} text="Phát bài hát" className="song-play-button" />
+                        {authenticationService.isAuthenticated() && (
+                            <Button
+                                className={`favorite-button ${isFavorited ? 'favorited' : ''}`}
+                                icon={isFavorited ? <IoIosHeart size={18}/> : <IoIosHeartEmpty size={18}/>}
+                                text={isFavorited ? 'Đã quan tâm' : 'Quan tâm'}
+                                onClick={(e) => {
+                                    if (isFavorited) {
+                                        deleteFavoriteSong(song);
+                                    } else {
+                                        addNewFavoriteSongById(song);
+                                    }
+                                }}
+                            />
+                        )}
                     </Group>
                 </Flex>
                 <Group className="song-chart">
                     <Typography tag="h2">Lượt nghe theo thời gian</Typography>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="90%" height={300}>
                         <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="date" />
@@ -85,9 +185,14 @@ export function Song() {
 
                     <Typography tag="h3">Thể loại</Typography>
                     <Typography>{song.genres?.map(g => g.genreName).join(', ')}</Typography>
+
+                    <Typography tag="h3">Số lượt yêu thích</Typography>
+                    <Typography>{Number(totalFavSong) || 0}</Typography>
                 </Card>
                 <Group className="song-lyrics">
-                    <Typography tag="h2">Lời bài hát</Typography>
+                    <Typography
+
+                         tag="h2">Lời bài hát</Typography>
                     <div
                         className="lyrics-content"
                         dangerouslySetInnerHTML={{ __html: song.lyrics }}
@@ -98,7 +203,9 @@ export function Song() {
                 <Typography tag="h2">Nghệ sĩ tham gia</Typography>
                 <Flex gap="20px" wrap>
                     {song.artists?.map(artist => (
-                        <Card key={artist.artistId}
+                        <Card
+                            className="circle"
+                            key={artist.artistId}
                               shape="circle"
                               srcImg={artist.avatar}
                               urlLink={`/artists/${artist.artistId}`}

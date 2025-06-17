@@ -8,9 +8,10 @@ import {PlayMusicProvider} from "./core/contexts/PlayMusicContext";
 import LayoutHome from "./layouts/LayoutHome";
 import LayoutDashboard from "./layouts/LayoutDashboard";
 import LoginPage from "./pages/Login/LoginPage";
-import {RegisterForm} from "./pages/Login/RegisterForm";
-import {AuthProvider} from "./firebase";
 import {PopUpProvider} from "./core/contexts/PopUpContext";
+import NotFound from "./pages/NotFound/NotFound";
+import {ForgotPassword} from "./pages/Login/ForgotPassword/ForgotPassword";
+import {CheckEmail} from "./pages/Login/ForgotPassword/CheckEmail";
 
 AOS.init();
 
@@ -65,7 +66,9 @@ function App() {
                                 })}
                             </Route>
                             <Route path={"/login"} element={<LoginPage/>}/>
-                            <Route path={"/register"} element={<RegisterForm/>}/>
+                            <Route path={"/check-email"} element={<CheckEmail/>}/>
+                            <Route path={"/forgot-password"} element={<ForgotPassword/>}/>
+                            <Route path={"*"} element={<NotFound/>}/>
                         </Routes>
                     </Router>
                 </PlayMusicProvider>

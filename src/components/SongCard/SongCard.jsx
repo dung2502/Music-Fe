@@ -9,8 +9,8 @@ import wave from "../../assets/gif/icon-playing.gif";
 import {FaPlay} from "react-icons/fa";
 import React, {useEffect, useState} from "react";
 import * as favoriteService from "../../core/services/FavoriteService";
+import * as authenticationService from "../../core/services/AuthenticationService";
 import {toast} from "react-toastify";
-
 export default function SongCard({songList, song, index}) {
     const {
         playSongList,
@@ -25,14 +25,14 @@ export default function SongCard({songList, song, index}) {
 
     const [modalSongIndex, setModalSongIndex] = useState(0);
     const [isOpenSongMenu, setIsOpenSongMenu] = useState(false);
+    const [isFavorited, setIsFavorited] = useState(false);
+
 
     useEffect(() => {
-
-        const fetchData = async () => {
-           console.log(song.coverImageUrl);
+        if (song) {
+            setIsFavorited(song.userFavoriteStatus || false);
         }
-        fetchData();
-    }, []);
+    }, [song]);
 
     const handlePlaySong = (index) => {
         if (playSongList !== songList) {
@@ -54,10 +54,53 @@ export default function SongCard({songList, song, index}) {
         setModalSongIndex(0);
         setIsOpenSongMenu(false);
     }
-    const addNewFavoriteSong = async (song) => {
-        await favoriteService.addFavoriteSong(song);
-        toast.success("Đã cập nhật bài hát yêu thích mới");
 
+    const addNewFavoriteSong = async (song) => {
+        console.log(song);
+        try {
+            const response = await favoriteService.addFavoriteSong(song);
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error(error);
+        }
+    };
+
+    const addNewFavoriteSongById = async (song) => {
+        console.log(song.songId);
+        try {
+            const response = await favoriteService.addFavoriteSongBySongId(song.songId); // chỉ truyền songId
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error("Lỗi khi thêm yêu thích:", error);
+        }
+    };
+
+
+    const deleteFavoriteSong = async (song) => {
+        try {
+            const response = await favoriteService.deleteFavoriteSong(song);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
     }
 
     return(
@@ -83,14 +126,26 @@ export default function SongCard({songList, song, index}) {
 
                           </Button>
 
-                          <Button className={'card-icon heart'} type={'button'}
-                                  theme={'reset'}
-                                  icon={<IoIosHeart size={22} fill={song.userFavoriteStatus ? "red" : "white"}/>}
+                          {authenticationService.isAuthenticated() && (
+                              <Button
+                                  className="card-icon heart"
+                                  type="button"
+                                  theme="reset"
+                                  icon={
+                                      <IoIosHeart
+                                          size={22}
+                                          fill={isFavorited ? "red" : "white"}
+                                      />
+                                  }
                                   onClick={(e) => {
-                                      e.stopPropagation();
-                                      addNewFavoriteSong(song)
-                                  }}>
-                          </Button>
+                                      if (isFavorited) {
+                                          deleteFavoriteSong(song);
+                                      } else {
+                                          addNewFavoriteSongById(song);
+                                      }
+                                  }}
+                              />
+                          )}
 
                           <Button className={'card-icon menu'}
                                   theme={'reset'}

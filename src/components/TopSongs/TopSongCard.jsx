@@ -9,8 +9,10 @@ import {FaPlay} from "react-icons/fa";
 import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import {HiOutlineDotsHorizontal} from "react-icons/hi";
 import {toast} from "react-toastify";
+import * as favoriteService from "../../core/services/FavoriteService";
+import * as authenticationService from "../../core/services/AuthenticationService";
 
-export default function TopSongCard({songList, song, key, listenCount}) {
+export default function TopSongCard({songList,song, key, listenCount}) {
     const {
         playSongList,
         songIndexList,
@@ -22,43 +24,58 @@ export default function TopSongCard({songList, song, key, listenCount}) {
         setAlbumPlaylistId
     } = usePlayMusic();
 
-    const [isFavorite, setIsFavorite] = useState(false);
+    const [isFavorited, setIsFavorited] = useState(false);
+
 
     useEffect(() => {
-        console.log(song)
-        const fetchFavorites = async () => {
-            try {
-                const favorites = await getAllFavoriteForUser();
-                const isFav = favorites.some((fav) => String(fav.songId) === String(song.songId));
-                console.log(isFav);
-                setIsFavorite(isFav);
-            } catch (error) {
-                console.error('Error fetching favorites:', error);
-            }
-        };
-        fetchFavorites();
-    }, [song.songId]);
+        if (song) {
+            setIsFavorited(song.userFavoriteStatus || false);
+        }
+    }, [song]);
 
-    const handleAddFavorite = async (e) => {
-        e.stopPropagation();
+    const addNewFavoriteSongById = async (song) => {
+        console.log(song.songId);
         try {
-            await addFavoriteSong(song);
-            setIsFavorite(true);
-            toast.success("Đã cập nhật bài hát yêu thích mới");
+            const response = await favoriteService.addFavoriteSongBySongId(song.songId); // chỉ truyền songId
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
         } catch (error) {
-            toast.error("Thêm yêu thích thất bại");
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error("Lỗi khi thêm yêu thích:", error);
         }
     };
 
-    const handlePlaySong = (index) => {
-        if (song) {
-            addSongList([song]);
-            changeSongIndex(0);
-            setAlbumPlaylistId(index);
+
+    const deleteFavoriteSong = async (song) => {
+        try {
+            const response = await favoriteService.deleteFavoriteSong(song);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
         }
+    }
+
+    const handlePlaySong = (index) => {
+        console.log("abc")
+        if (playSongList !== songList) {
+            addSongList(songList);
+        }
+        changeSongIndex(index);
     };
 
     const handlePlayAndPauseSong = () => {
+        console.log("abc")
+
         toggleIsPlayingSong(!isPlayingSong);
     };
 
@@ -80,10 +97,26 @@ export default function TopSongCard({songList, song, key, listenCount}) {
                       LinkComponent={Link} description={song.artist}
                       children={
                       <Flex justifyContent={"center"} alignItems={"center"} className={'action-menu'}>
-                          <Button className={'card-icon heart'} type={'button'} theme={'reset'}
-                                  icon={<IoIosHeart size={22} fill={isFavorite ? "red" : "white"}/>}
-                                  onClick={handleAddFavorite}>
-                          </Button>
+                          {authenticationService.isAuthenticated() && (
+                              <Button
+                                  className="card-icon heart"
+                                  type="button"
+                                  theme="reset"
+                                  icon={
+                                      <IoIosHeart
+                                          size={22}
+                                          fill={isFavorited ? "red" : "white"}
+                                      />
+                                  }
+                                  onClick={(e) => {
+                                      if (isFavorited) {
+                                          deleteFavoriteSong(song);
+                                      } else {
+                                          addNewFavoriteSongById(song);
+                                      }
+                                  }}
+                              />
+                          )}
 
                           {albumOrPlaylistId === song.songId ? (
                               <Button theme={'reset'} className={'card-icon play'}
@@ -94,7 +127,7 @@ export default function TopSongCard({songList, song, key, listenCount}) {
                                       gd={{border: 'none'}}/>
                           ) : (
                               <Button theme={'reset'} className={'card-icon play'}
-                                      onClick={() => handlePlaySong(song.songId)}
+                                      onClick={() => handlePlaySong(songList.findIndex(s => s.songId === song.songId))}
                                       icon={<FaPlay size={30} style={{paddingLeft: 5}} fill={"white"}/>}
                                       gd={{border: 'none'}}/>
                           )}
@@ -106,4 +139,4 @@ export default function TopSongCard({songList, song, key, listenCount}) {
                   }>
                   </Card>
                   );
-              }
+}

@@ -13,6 +13,9 @@ import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import wave from "../../assets/gif/icon-playing.gif";
 import ModalSongMenu from "../../components/Modal/ModalMenu/ModalSongMenu";
 import {getArtistById} from "../../core/services/ArtistService";
+import * as favoriteService from "../../core/services/FavoriteService";
+import {toast} from "react-toastify";
+import * as authenticationService from "../../core/services/AuthenticationService";
 
 export function Artist() {
     const {
@@ -27,6 +30,11 @@ export function Artist() {
     const [artist, setArtist] = useState({});
     const [modalSongIndex, setModalSongIndex] = useState(0);
     const [isOpenSongMenu, setIsOpenSongMenu] = useState(false);
+    const [favoriteArtists, setFavoriteArtists] = useState([]);
+    const [isFavorited, setIsFavorited] = useState(false);
+    const isAuthenticated = authenticationService.isAuthenticated();
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,6 +68,57 @@ export function Artist() {
         setModalSongIndex(0);
         setIsOpenSongMenu(false);
     }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await getFavoriteArtists('','DESC',0,100)
+        }
+        fetchData().then().catch(console.error);
+    }, []);
+
+
+    const getFavoriteArtists = async (sort, direction,page,size) => {
+        const temp = await artistService.getAllFavoriteArtists(sort, direction,page,size);
+        setFavoriteArtists(temp.content);
+    }
+
+    useEffect(() => {
+        if (favoriteArtists && artist.artistId) {
+            const isFav = favoriteArtists.some(favArtist => favArtist.artistId === artist.artistId);
+            setIsFavorited(isFav);
+        }
+    }, [favoriteArtists, artist]);
+
+    const addNewFavoriteArtist = async (artist) => {
+        try {
+            const response = await favoriteService.addFavoriteArtist(artist);
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error(error);
+        }
+    }
+
+    const deleteFavArtist = async (artist) => {
+        try {
+            const response = await favoriteService.deleteFavoriteArtist(artist);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
+    }
+
     return (
         <Container withShadow={false}>
             <Group className={'artist-header'}>
@@ -75,7 +134,19 @@ export function Artist() {
                       }
                       description={
                           <Flex justifyContent={'start'} alignItems={'center'}>
-                              <Button icon={<FiUserPlus size={18}/>} text={'Quan tâm'}></Button>
+                              <Button 
+                                  className={`favorite-button ${isFavorited ? 'favorited' : ''}`}
+                                  icon={<FiUserPlus size={18}/>} 
+                                  text={isFavorited ? 'Đã quan tâm' : 'Quan tâm'}
+                                  onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (isFavorited) {
+                                          deleteFavArtist(artist);
+                                      } else {
+                                          addNewFavoriteArtist(artist);
+                                      }
+                                  }}>
+                              </Button>
                           </Flex>
                       }
                       gd={{ maxWidth: '100%', padding: 20}}
@@ -87,13 +158,11 @@ export function Artist() {
                         <Typography tag="h2">Bài hát nổi bật</Typography>
                         <Button text="Tất cả" theme="transparent" size={1} icon={<MdArrowForwardIos />} iconPosition="right" gap={1} />
                     </Flex>
-                    {/*Test Song*/}
                     <Grid columns={1} md={2}>
                         {artist.songs && artist.songs.map((song, index) => (
-                            <Flex className={playSongList[songIndexList].songId === song.songId && isPlayingSong
-                                ? "audio-card active" : "audio-card"}>
+                            <Flex className={`audio-card ${playSongList[songIndexList]?.songId === song.songId && isPlayingSong ? "active" : ""}`}>
                                 <Card sizeImg={60}
-                                      className={playSongList[songIndexList].songId === song.songId ? "song-card active": "song-card"}
+                                      className={`song-card ${playSongList[songIndexList]?.songId === song.songId ? "active": ""}`}
                                       key={index}
                                       srcImg={song.coverImageUrl}
                                       title={song.title} long
@@ -132,7 +201,7 @@ export function Artist() {
                                       gd={{width: 60, height: 60, margin: 10}}
                                 >
                                     {
-                                        playSongList[songIndexList].songId === song.songId ?
+                                        playSongList[songIndexList]?.songId === song.songId ?
                                             <Button theme={'reset'}
                                                     onClick={handlePlayAndPauseSong}
                                                     icon={

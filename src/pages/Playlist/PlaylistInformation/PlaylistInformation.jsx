@@ -6,8 +6,12 @@ import { Link } from "react-router-dom";
 import * as playlistsService from "../../../core/services/PlayListService";
 import "./PlaylistInformation.css";
 import * as PlaylistService from "../../../core/services/PlayListService";
-import {toast} from "react-toastify";
 import {usePopUp} from "../../../core/contexts/PopUpContext";
+import * as playlistService from "../../../core/services/PlayListService";
+import * as favoriteService from "../../../core/services/FavoriteService";
+import {toast} from "react-toastify";
+import {FiUserPlus} from "react-icons/fi";
+import * as authenticationService from "../../../core/services/AuthenticationService";
 
 export function PlaylistInformation(){
     const {
@@ -23,8 +27,11 @@ export function PlaylistInformation(){
     const [playlist, setPlaylist] = useState({});
     const [modalVisible, setModalVisible] = useState(false);
     const [playlistToDelete, setPlaylistToDelete] = useState(null);
+    const [favoritePlayLists, setFavoritePlaylists] = useState([]);
+    const [isFavorited, setIsFavorited] = useState(false);
     const showToast = usePopUp();
     const currentUser = JSON.parse(localStorage.getItem("user"));
+    const isAuthenticated = authenticationService.isAuthenticated();
 
     const navigate = useNavigate();
 
@@ -66,6 +73,60 @@ export function PlaylistInformation(){
         }
         changeSongIndex(index);
     };
+    useEffect(() => {
+        const fetchData = async () => {
+            await getFavoritePlaylist('','DESC',0,100)
+        }
+        fetchData().then().catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        if (favoritePlayLists && playlist.playlistId) {
+            const isFav = favoritePlayLists.some(favPlaylist => favPlaylist.playlistId === playlist.playlistId);
+            setIsFavorited(isFav);
+        }
+    }, [favoritePlayLists, playlist]);
+
+    const getFavoritePlaylist = async (sort, direction,page,size) => {
+        const temp = await PlaylistService.getAllFavoritePlaylists(sort, direction,page,size);
+        setFavoritePlaylists(temp.content);
+    }
+
+    useEffect(() => {
+        if (playlist) {
+            setIsFavorited(playlist.userFavoriteStatus || false);
+        }
+    }, [playlist]);
+
+    const addNewFavoritePlaylist = async (playlist) => {
+        try {
+            const response = await favoriteService.addFavoritePlaylist(playlist);
+            if (response.success) {
+                setIsFavorited(true);
+                toast.success("Đã thêm vào danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error(error);
+        }
+    };
+
+    const deleteFavoritePlaylist = async (playlist) => {
+        try {
+            const response = await favoriteService.deleteFavoritePlaylist(playlist);
+            if (response.success) {
+                setIsFavorited(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
+    }
 
     const columns = [
         {
@@ -144,6 +205,22 @@ export function PlaylistInformation(){
                                     </Flex>
                                 </>
                             )}
+                            <Flex center>
+                                {isAuthenticated && (
+                                    <Button
+                                        className={`favorite-button ${isFavorited ? 'favorited' : ''}`}
+                                        icon={<FiUserPlus size={18}/>}
+                                        text={isFavorited ? 'Đã quan tâm' : 'Quan tâm'}
+                                        onClick={(e) => {
+                                            if (isFavorited) {
+                                                deleteFavoritePlaylist(playlist);
+                                            } else {
+                                                addNewFavoritePlaylist(playlist);
+                                            }
+                                        }}
+                                    />
+                                )}
+                            </Flex>
                         </Group>
                     </Card>
                 </Group>
@@ -159,11 +236,48 @@ export function PlaylistInformation(){
                 </Group>
             </Flex>
             {modalVisible && (
-                <Modal title="Confirm Deletion" visible={modalVisible} onClose={() => setModalVisible(false)} isOpen>
-                    <Typography>Are you sure you want to delete this playlist?</Typography>
-                    <Flex justifyContent='end'>
-                        <Button text="Cancel" onClick={() => setModalVisible(false)} />
-                        <Button text="Delete" onClick={confirmDeletePlaylist} />
+                <Modal 
+                    title="Xác nhận xóa" 
+                    visible={modalVisible} 
+                    onClose={() => setModalVisible(false)} 
+                    isOpen
+                    className="delete-playlist-modal"
+                >
+                    <Flex direction="column" gap="20px" alignItems="center">
+                        <Typography tag="h3" gd={{ color: '#ff4d4f', marginBottom: '10px' }}>
+                            Cảnh báo
+                        </Typography>
+                        <Typography gd={{ textAlign: 'center', fontSize: '16px' }}>
+                            Bạn có chắc chắn muốn xóa playlist này không? Hành động này không thể hoàn tác.
+                        </Typography>
+                        <Flex gap="10px" justifyContent='center' gd={{ marginTop: '20px' }}>
+                            <Button 
+                                text="Hủy" 
+                                onClick={() => setModalVisible(false)}
+                                gd={{
+                                    padding: '8px 24px',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                    }
+                                }}
+                            />
+                            <Button 
+                                text="Xóa" 
+                                onClick={confirmDeletePlaylist}
+                                gd={{
+                                    padding: '8px 24px',
+                                    backgroundColor: '#ff4d4f',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        backgroundColor: '#ff7875',
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 2px 8px rgba(255,77,79,0.35)'
+                                    }
+                                }}
+                            />
+                        </Flex>
                     </Flex>
                 </Modal>
             )}

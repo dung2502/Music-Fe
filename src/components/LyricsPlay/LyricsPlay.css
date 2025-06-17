@@ -1,7 +1,7 @@
 .lyrics-play {
     position: absolute;
     width: 100%;
-    height: 100vh;
+    height: 80vh;
     top: 0;
     left: 0;
     transform: translateY(100%);
@@ -13,7 +13,6 @@
 }
 
 .lyrics-content {
-
     p {
         font-weight: 600;
         background-clip: text!important;
@@ -91,7 +90,7 @@
     .audio-card.active {
         .audio-image {
             img {
-                animation: spin 8s linear infinite; /* Bắt đầu xoay khi phát nhạc */
+                animation: spin 8s linear infinite;
             }
         }
     }
@@ -103,5 +102,220 @@
     }
     100% {
         transform: rotate(360deg);
+    }
+}
+
+.lyrics-play-container {
+    width: 100%;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    color: white;
+}
+
+.song-title-lyrics {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    background: linear-gradient(91.56deg, #ff9357 1.54%, #9100ff 98.71%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.lyrics-layout {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    gap: 2rem;
+    height: calc(80vh - 100px);
+}
+
+.lyrics-section {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+.song-image-lyrics{
+    max-width: 1000px;
+    max-height: 400px;
+}
+
+.lyrics-content {
+    scroll-behavior: smooth;
+    height: 100%;
+    overflow-y: auto;
+    padding: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.lyrics-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lyrics-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.lyrics-content::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.lyric-line {
+    font-size: 1.2rem;
+    line-height: 2;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    color: white;
+}
+
+.lyric-line:hover {
+    transform: translateX(5px);
+}
+
+.lyric-line.highlight {
+    transform: scale(1.05);
+}
+
+.lyric-word {
+    position: relative;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: gray;
+    text-shadow: none;
+}
+
+.lyric-word.active {
+    color: transparent;
+    background: linear-gradient(91.56deg, #ff9357 1.54%, #9100ff 98.71%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: wordPulse 0.5s ease;
+    transform: scale(1.1);
+    text-shadow: 0 0 15px rgba(255, 147, 87, 0.5);
+    z-index: 1;
+}
+
+.lyric-word.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(91.56deg, #ff9357 1.54%, #9100ff 98.71%);
+    animation: lineGrow 0.3s ease forwards;
+    box-shadow: 0 0 8px rgba(255, 147, 87, 0.3);
+}
+
+.lyric-word:not(.active):hover {
+    transform: translateY(-1px) scale(1.02);
+}
+
+@keyframes wordPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes lineGrow {
+    0% {
+        transform: scaleX(0);
+    }
+    100% {
+        transform: scaleX(1);
+    }
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: #ff4081;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.no-lyrics {
+    text-align: center;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 2rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Theme variations */
+.theme_3 .lyric-word.active {
+    background: linear-gradient(91.56deg, #d611dd 1.54%, #0023fd 98.71%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.theme_3 .lyric-word.active::after {
+    background: linear-gradient(91.56deg, #d611dd 1.54%, #0023fd 98.71%);
+}
+
+.theme_4 .lyric-word.active {
+    background: linear-gradient(91.56deg, #0023fd 1.54%, #00ff88 98.71%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.theme_4 .lyric-word.active::after {
+    background: linear-gradient(91.56deg, #0023fd 1.54%, #00ff88 98.71%);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .lyrics-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .lyrics-section,
+    .song-image-section {
+        width: 100%;
+        height: 50vh;
+    }
+
+    .song-title {
+        font-size: 1.5rem;
+    }
+
+    .lyric-line {
+        font-size: 1rem;
     }
 }

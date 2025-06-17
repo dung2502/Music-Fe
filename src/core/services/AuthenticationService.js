@@ -47,6 +47,29 @@ export const updatePasswordUser = async (userData, token) => {
     }
 }
 
+export const checkEmail = async (data) => {
+    try {
+        const resp = await axiosClient.post(`check-email`, data);
+        return resp.data;
+    } catch (err) {
+        console.log(err)
+        err.message = "Kiểm tra email khẩu thất bại!"
+        throw err.response.data.errors;
+    }
+}
+
+export const forgotPassword = async (data) => {
+    try {
+        const resp = await axiosClient.post(`forgot-password`, data);
+        console.log(data);
+        return resp.data;
+    } catch (err) {
+        console.log(err)
+        err.message = "Đổi mật khẩu thất bại!"
+        throw err.response.data.errors;
+    }
+}
+
 /**AUTHENTICATION CHECKER */
 export const logout = async() => {
     try {

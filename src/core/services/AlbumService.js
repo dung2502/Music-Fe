@@ -30,8 +30,7 @@ export const getAllAlbumsWithPage = async (contentSearch, page) => {
 
 export const getAllSuggestedAlbums = async () => {
     try {
-        const temp
-            = await axios.get(`${BASE_URL}/api/public/albums/suggestedAlbums`);
+        const temp= await axios.get(`${BASE_URL}/api/public/albums/suggestedAlbums`);
         console.log(temp.data)
         return temp.data.content;
     } catch (e) {
@@ -49,6 +48,16 @@ export const getSixAlbumsBest = async () => {
     } catch (e) {
         console.log(e)
         return [];
+    }
+}
+
+export const getSixAlbumsBestForUser = async () => {
+    try {
+        const res = await axiosClient.get(`/albums/top-albums-for-user`);
+        console.log(res.data)
+        return res.data.content;
+    } catch (e) {
+        console.error('Error updating user listen:', e);
     }
 }
 

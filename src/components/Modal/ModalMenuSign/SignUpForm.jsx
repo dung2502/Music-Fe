@@ -34,6 +34,8 @@ const SignUpForm = ({ register, errors, validateError, handleSubmit, handleSignU
                 validateError={validateError}
                 rules={{
                     required: "* Bắt buộc nhập trường này",
+                    minLength: {value: 8, message: "Mật khẩu phải từ 8 đến 50 chữ!"},
+                    maxLength: {value: 50, message: "Mật khẩu phải từ 8 đến 50 chữ!"},
                     pattern: {
                         value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&/_])[A-Z][A-Za-z\d@$!%*/?&]{7,49}$/,
                         message: "Mật khẩu phải bắt đầu bằng chữ hoa, có ít nhất 1 chữ thường, 1 số, 1 ký tự đặc biệt và dài từ 8 đến 50 ký tự!",

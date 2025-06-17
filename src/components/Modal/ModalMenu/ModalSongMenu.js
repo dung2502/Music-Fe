@@ -1,6 +1,6 @@
 import {Button, Card, Flex, Group, Modal, Typography} from "lvq";
 import style from "./ModalSongMenu.module.scss"
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import {IoIosHeart} from "react-icons/io";
 import {PiMicrophoneStage, PiMusicNotesPlusLight} from "react-icons/pi";
@@ -10,11 +10,14 @@ import {LyricAndComment} from "../../LyricAndComment/LyricAndComment";
 import * as favoriteService from "../../../core/services/FavoriteService";
 import {toast} from "react-toastify";
 import ModalAddPlaylist from "../ModalAddSongToPlaylist/ModalAddPlaylist";
+import { IoIosInformationCircleOutline } from "react-icons/io";
 
 const ModalSongMenu = ({ isOpen, onClose, song}) => {
     const [isShowPlayLyrics, setShowPlayLyrics] = useState(false);
     const [isShowAddPlaylist, setIsShowAddPlaylist] = useState(false);
     const isAuthenticated = !!localStorage.getItem('user');
+    const navigate = useNavigate();
+
 
 
     const handleShowPlayLyrics = () => {
@@ -23,6 +26,10 @@ const ModalSongMenu = ({ isOpen, onClose, song}) => {
 
     const handleShowAddPlaylist = () => {
         setIsShowAddPlaylist(!isShowAddPlaylist);
+    }
+
+    const handleGoToSongInformation = (songId) => {
+        navigate('/song/'+ songId);
     }
 
     useEffect(() => {
@@ -100,11 +107,22 @@ const ModalSongMenu = ({ isOpen, onClose, song}) => {
                                         }}>
                                 </Button>
                             </li>
+                            <li>
+                                Thông tin
+                                <Button className={'card-icon heart'} type={'button'}
+                                        theme={'reset'}
+                                        icon={<IoIosInformationCircleOutline />}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleGoToSongInformation(song.songId);
+                                        }}>
+                                </Button>
+                            </li>
                         </ul>
                     </Group>
-                )}{isShowPlayLyrics && <LyricAndComment showLyrics={isShowPlayLyrics} song={song} />}
+                )}{isShowPlayLyrics && <LyricAndComment showLyrics={isShowPlayLyrics} song={song}/>}
             </Modal>
-            <ModalAddPlaylist 
+            <ModalAddPlaylist
                 isOpen={isShowAddPlaylist}
                 onClose={handleShowAddPlaylist}
                 song={song}

@@ -1,17 +1,18 @@
-import axios from "axios";
 import axiosClient from "../../utils/axiosClient";
 
-const BASE_URL = process.env.REACT_APP_API_URL;
 
 
 export const getAllPlaylists = async () => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+        return [];
+    }
     try {
-        const temp
-            = await axiosClient.get(`playlists/findAll`);
+        const temp = await axiosClient.get(`playlists/findAll`);
         console.log(temp.data)
         return temp.data;
     } catch (e) {
-        console.log(e)
+        console.error("Error get PlaylistUser:", e);
         return [];
     }
 }
@@ -26,7 +27,8 @@ export const getAllFavoritePlaylists = async (sort, direction,page,size) => {
         console.log(response.data)
         return response.data;
     } catch (e) {
-        return [];
+        console.error("Error get fav PlaylistUser:", e);
+        throw new Error("Không thể Lấy fav playlist");
     }
 }
 
@@ -35,19 +37,22 @@ export const getAllPlaylistAuth = async (playlistName, page) => {
         const temp= await axiosClient.get(`playlists/getAllWithPage?playlistName=${playlistName}&page=${page-1}`);
         return temp.data;
     } catch (e) {
-        console.log(e)
-        return [];
+        console.error("Error get all auth PlaylistUser:", e);
+        throw new Error("Không thể Lấy auth playlist");
     }
 }
 
 export const getAllPlaylistByUserId = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const userId = user.userId;
+    const user = localStorage.getItem("user");
+    if (!user) {
+        return [];
+    }
+    const userId = JSON.parse(user).userId;
     try {
         const temp= await axiosClient.get(`playlists/user/${userId}`);
         return temp.data;
     } catch (e) {
-        console.log(e)
+        console.error("Error all user PlaylistUser:", e);
         return [];
     }
 }
@@ -63,7 +68,7 @@ export const savePlaylistAuth = async (data) => {
     }
     catch (e){
         console.error("Error saving PlaylistUser:", e);
-        throw new Error("Không thể thêm mới");
+        throw new Error("Không lưu playlist");
     }
 };
 
@@ -133,6 +138,9 @@ export const getTotalPlaylistListens = async (playlistId) => {
         return 0;
     }
 };
+
+
+
 
 
 

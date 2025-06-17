@@ -7,16 +7,8 @@ import "slick-carousel/slick/slick-theme.css";
 import {MdArrowForwardIos} from "react-icons/md";
 import * as albumsService from "../../core/services/AlbumService";
 import * as songService from "../../core/services/SongService";
-import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
-import {LiaMicrophoneAltSolid} from "react-icons/lia";
-import {IoIosHeart} from "react-icons/io";
-import {HiOutlineDotsHorizontal} from "react-icons/hi";
-import wave from "../../assets/gif/icon-playing.gif";
-import {FaPlay} from "react-icons/fa";
-import ModalSongMenu from "../../components/Modal/ModalMenu/ModalSongMenu";
 import AlbumCard from "../../components/AlbumAndPlayListCard/AlbumCard";
 import SongCard from "../../components/SongCard/SongCard";
-import {getSixAlbumsBest} from "../../core/services/AlbumService";
 import TopSongCard from "../../components/TopSongs/TopSongCard";
 
 function HomePage() {
@@ -47,8 +39,11 @@ function HomePage() {
     };
 
     const [albums, setAlbums] = useState([]);
+    const [albumsForUser, setAlbumsForUser] = useState([]);
     const [songs, setSongs] = useState([]);
+    const [songsForUser, setSongsForUser] = useState([]);
     const [suggestedSongs, setSuggestedSongs] = useState([]);
+    const [releasedSongsForUser, setReleasedSongsForUser] = useState([]);
     const [newReleasedSongs, setNewReleasedSongs] = useState([]);
     const [recentListens, setRecentListens] = useState([]);
     const [top100Songs, setTop100Songs] = useState([]);
@@ -59,28 +54,44 @@ function HomePage() {
 
 
 
+    const fetchCommonData = async () => {
+        if (isAuthenticated) {
+            await getSixSongsHighListeningForUser();
+            await getSixAlbumsHighListeningForUser();
+            await getAllSongNewReleasedForUser();
+            await getAllSongSuggested();
+        } else {
+            await getSixSongsHighListening();
+            await getSixAlbumsHighListening();
+            await getNewReleasedSong();
+        }
+    };
+
     useEffect(() => {
         const fetchData = async () => {
-                    await getSixAlbumsHighListening();
-                    await getSixSongsHighListening();
-                    await getNewReleasedSong()
-
-                    if (isAuthenticated) {
-                        await getAllSongSuggested();
-                    }
+            try {
+                await fetchCommonData();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
         };
         fetchData();
-
-    }, [isAuthenticated])
+    }, [isAuthenticated]);
 
     useEffect(() => {
         const fetchRecentListens = async () => {
-            const data = await songService.getRecentUserListens();
-            setRecentListens(data);
+            if (isAuthenticated) {
+                try {
+                    const data = await songService.getRecentUserListens();
+                    setRecentListens(data);
+                } catch (error) {
+                    console.error('Error fetching recent listens:', error);
+                }
+            }
         };
 
-        fetchRecentListens().catch(console.error);
-    }, []);
+        fetchRecentListens();
+    }, [isAuthenticated]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -93,6 +104,11 @@ function HomePage() {
         const temp = await albumsService.getSixAlbumsBest();
         setAlbums(temp);
     }
+    const getSixAlbumsHighListeningForUser = async () => {
+        const temp = await albumsService.getSixAlbumsBestForUser();
+        setAlbumsForUser(temp);
+    }
+
 
     const getSixSongsHighListening = async () => {
         const temp = await songService.getSixSongsBest();
@@ -105,15 +121,36 @@ function HomePage() {
         setSongListenCounts(listenCounts);
     };
 
+    const getSixSongsHighListeningForUser = async () => {
+        const temp = await songService.getSixSongsBestForUser();
+        setSongsForUser(temp);
+        const listenCounts = {};
+        for (const song of temp){
+            const count = await songService.getTotalSongListenBySongId(song.songId)
+            listenCounts[song.songId] = count;
+        }
+        setSongListenCounts(listenCounts);
+    };
+
+
+
     const getAllSongSuggested = async () => {
         const temp = await songService.getSuggestedSongsForUser();
         setSuggestedSongs(temp);
+    }
+
+    const getAllSongNewReleasedForUser = async () => {
+        const temp = await songService.getReleasedSongsForUser();
+
+        setReleasedSongsForUser(temp);
     }
 
     const getNewReleasedSong = async () => {
         const temp = await songService.getSongNewReleased();
         setNewReleasedSongs(temp);
     }
+
+
 
     const getNew100Songs = async () => {
         const temp = await songService.getTop100Songs();
@@ -173,7 +210,11 @@ function HomePage() {
                         </Flex>
                         <Grid columns={1} md={2} xl={3} gap={6}>
                             {suggestedSongs && suggestedSongs.map((song, index) => (
-                                <SongCard songList={suggestedSongs} song={song} index={index}/>
+                                <SongCard
+                                    songList={suggestedSongs}
+                                    song={song}
+                                    index={index}
+                                />
                             ))}
                         </Grid>
                     </Container>
@@ -189,9 +230,21 @@ function HomePage() {
                     </Link>
                 </Flex>
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
-                    {albums && albums.map((album, index) => (
-                        <AlbumCard album={album} key={index}/>
-                    ))}
+
+                    {isAuthenticated ?
+                        (
+                            albumsForUser && albumsForUser.map((album, index) => (
+                            <AlbumCard
+                            album={album}
+                            key={index}/>
+                        )))
+                        :(
+                            albums && albums.map((album, index) => (
+                            <AlbumCard
+                            album={album}
+                        key={index}/>
+                        )))
+                    }
                 </Grid>
             </Container>
 
@@ -204,9 +257,23 @@ function HomePage() {
                     </Link>
                 </Flex>
                 <Grid columns={1} sm={2} xl={3} gap={6}>
-                    {newReleasedSongs && newReleasedSongs.map((song, index) => (
-                        <SongCard songList={newReleasedSongs} song={song} index={index}/>
-                    ))}
+                    {isAuthenticated ? (
+                        releasedSongsForUser && releasedSongsForUser.map((song, index) => (
+                            <SongCard
+                                songList={releasedSongsForUser}
+                                song={song}
+                                index={index}
+                            />
+                        ))
+                    ) : (
+                        newReleasedSongs && newReleasedSongs.map((song, index) => (
+                            <SongCard
+                                songList={newReleasedSongs}
+                                song={song}
+                                index={index}
+                            />
+                        ))
+                    )}
                 </Grid>
             </Container>
 
@@ -219,13 +286,27 @@ function HomePage() {
                     </Link>
                 </Flex>
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
-                    {songs && songs.map((song, index) => (
-                        <TopSongCard
-                            listenCount={songListenCounts[song.songId] || 0}
-                            songList={songs}
-                            song={song}
-                            key={index} />
-                    ))}
+                    {isAuthenticated ? (
+                        songsForUser && songsForUser.map((song, index) => (
+                            <TopSongCard
+                                key={index}
+                                listenCount={songListenCounts[song.songId] || 0}
+                                songList={songsForUser}
+                                song={song}
+                                index={index}
+                            />
+                        ))
+                    ) : (
+                        songs && songs.map((song, index) => (
+                            <TopSongCard
+                                key={index}
+                                listenCount={songListenCounts[song.songId] || 0}
+                                songList={songs}
+                                song={song}
+                                index={index}
+                            />
+                        ))
+                    )}
                 </Grid>
 
             </Container>

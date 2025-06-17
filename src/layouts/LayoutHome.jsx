@@ -29,9 +29,12 @@ import {ModalSelectTheme} from "../components/Modal/ModalMenu/ModalSelectTheme";
 import {IoShirt} from "react-icons/io5";
 import shirt from "../assets/icons/shirt.svg";
 import {BiMessageRoundedDetail} from "react-icons/bi";
+import {HiOutlineQuestionMarkCircle} from "react-icons/hi";
 import {ChatBox} from "../components/ChatBox/ChatBox";
 import ModalMenuSigUp from "../components/Modal/ModalMenuSign/ModalMenuSign";
 import * as userService from "../core/services/UserService";
+import { ChatBoxForHelpUser } from "../components/ChatBoxForHelpUser/ChatBoxForHelpUser";
+
 
 var stompClient = null;
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -43,6 +46,7 @@ function LayoutHome() {
     const [isModalPlaylistOpen, setIsModalPlaylistOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     const [isVip, setIsVip] = useState(false);
+    const [openChatForHelpUser, setOpenChatForHelpUser] = useState(false);
     const [userIf, setUserIf] = useState(null);
 
     const {
@@ -50,7 +54,7 @@ function LayoutHome() {
         songIndexList,
         isPlayingSong,
     } = usePlayMusic();
-    // const isAuthenticated = !!localStorage.getItem("isAuthenticated");
+
     const [avatar, setAvatar] = useState(null);
     const { position: positionHeader, elementRef: elementRefHeader } = useElementPosition();
     const { position: positionSidebar, elementRef: elementRefSideBar } = useElementPosition();
@@ -96,6 +100,7 @@ function LayoutHome() {
         getAllNotifications(3)
 
     }
+
     const onError=(error)=>{
         console.log(error)
     }
@@ -120,7 +125,6 @@ function LayoutHome() {
     }, []);
 
     useEffect(() => {
-        console.log(localStorage.getItem('user'));
         connect();
         return () => {
             if (stompClient) {
@@ -150,10 +154,8 @@ function LayoutHome() {
 
 
     const getAllNotifications =(roleId)=>{
-        console.log("Hello");
         notificationService.getAllNotifications(roleId).then(res => {
             setNotifications(res);
-            console.log(res)
             const count = res.reduce((acc, notification) =>
                 !notification.statusRead ? acc + 1 : acc, 0
             );
@@ -309,10 +311,25 @@ function LayoutHome() {
 
                                 {
                                     isAuthenticated && isVip && (
-                                        <Button text="" className="setting-home" theme="setting" icon={<BiMessageRoundedDetail size={24} />} rounded="rounded-full"
-                                                onClick={()=>setOpenChatModal(!openChatModal)}/>
+                                            <Button
+                                                text=""
+                                                className="setting-home"
+                                                theme="setting"
+                                                icon={<BiMessageRoundedDetail size={24} />}
+                                                rounded="rounded-full"
+                                                onClick={() => setOpenChatModal(!openChatModal)}
+                                            />
                                     )
                                 }
+
+                                <Button
+                                    text=""
+                                    className="setting-home"
+                                    theme="setting"
+                                    icon={<HiOutlineQuestionMarkCircle size={24} />}
+                                    rounded="rounded-full"
+                                    onClick={() => setOpenChatForHelpUser(!openChatForHelpUser)}
+                                />
 
                                 <Avatar src={avatar} size={40} id="avatar_active_modal_sigup" onClick={() => setOpenModalAvatar(!openModalAvatar)} />
                             </Flex>
@@ -351,6 +368,11 @@ function LayoutHome() {
             <NotificationBox openNotification={openNotification} callOpenNotification={handleCloseNotification} notifications={notifications}></NotificationBox>
             <ChatBox openChat={openChatModal} callCloseChat={handleCloseChat} />
 
+            <ChatBoxForHelpUser
+                openChat={openChatForHelpUser}
+                callCloseChat={() => setOpenChatForHelpUser(false)}
+                stompClient={stompClient}
+            />
 
             {playSongList.length > 0 &&
                 <ModalSongMenu

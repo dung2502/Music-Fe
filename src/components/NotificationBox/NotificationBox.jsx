@@ -79,7 +79,7 @@ export function NotificationBox({openNotification, callOpenNotification, notific
                             <Card sizeImg={60} srcImg={notification.urlImage}
                                   shape={"square"} gd={{height: "80px", marginTop: "4px"}}
                                   title={<Flex> <Typography tag={'p'} gd={{fontSize: '0.9rem',margin:"0",color:"#fff"}}>{notification.title}</Typography> <Typography tag={'p'} gd={{color:"#ccc",fontSize: '0.7rem',margin:"0"}}>{timeAgo(notification.createDate)}</Typography></Flex>} long={true}
-                                  description={<Typography tag={'p'} gd={{color:"#ccc",fontSize: '0.8rem',margin:"0"}}>{notification.content}</Typography>}
+                                  // description={<Typography tag={'p'} gd={{color:"#ccc",fontSize: '0.8rem',margin:"0"}}>{notification.content}</Typography>}
                             />
                         </Link>
                     ))

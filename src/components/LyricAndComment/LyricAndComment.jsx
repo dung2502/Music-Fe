@@ -1,11 +1,11 @@
 import {Button, Card, cn, Container, Flex, Group, Modal, Typography} from "lvq";
-import {LyricsPlay} from "../LyricsPlay/LyricsPlay";
 import {useEffect, useState} from "react";
 import {FaAngleDown, FaCommentDots} from "react-icons/fa";
 import "./LyricAndComment.css";
 import {usePlayMusic} from "../../core/contexts/PlayMusicContext";
 import {CommentBox} from "../CommentBox/CommentBox";
 import {IoPlaySkipBack, IoPlaySkipForward} from "react-icons/io5";
+import LyricsPlay from "../LyricsPlay/LyricsPlay";
 
 export function LyricAndComment({showLyrics}) {
     const {

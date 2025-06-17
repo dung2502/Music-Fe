@@ -48,6 +48,9 @@ export const ModalUserAccess = ({ isOpen, onClose }) => {
     const handleEditUser = () => {
         navigate("/edit-user-information");
     };
+    const handleChangePassword = () => {
+        navigate("/change-password");
+    };
 
     const handleGoToDashboard = () => {
         navigate("/dashboard");
@@ -63,6 +66,7 @@ export const ModalUserAccess = ({ isOpen, onClose }) => {
                     </Grid>
                 ) : (
                     <Grid gd={{ maxWidth: "400px" }}>
+                        <Button text="Đổi mật khẩu" gap={8} rounded="rounded-full" gd={{ minWidth: "240px" }} onClick={handleChangePassword} />
                         <Button text="Cập nhật thông tin" gap={8} rounded="rounded-full" gd={{ minWidth: "240px" }} onClick={handleEditUser} />
                         {canAccessDashboard && (
                             <Button text="Dashboard" gap={8} rounded="rounded-full" gd={{ minWidth: "240px" }} onClick={handleGoToDashboard} />

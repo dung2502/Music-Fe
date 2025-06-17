@@ -65,5 +65,5 @@ export const getAllPaymentsUser = async (userId, page) => {
         console.log(e);
         return null;
     }
-};
+}
 

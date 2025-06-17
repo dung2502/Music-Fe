@@ -43,7 +43,7 @@ const National = [
     { title: "Nhạc Âu Mỹ", image: US, link: `${BaseUrl}/m-chart-week/Âu Mỹ` },
 ];
 const Emotion = [
-    { title: "DINNER", image: DINNER, link: `${BaseUrl}/albums/1` },
+    { title: "DINNER", image: DINNER, link: `${BaseUrl}/albums/28` },
     { image: RUNNING, link: `${BaseUrl}/albums/1` },
     { image: GYM, link: `${BaseUrl}/albums/1` },
     { image: GAME, link: `${BaseUrl}/albums/1` },
@@ -72,6 +72,7 @@ function Hub() {
 
     const [albums, setAlbums] = useState([]);
     const [songs, setSongs] = useState([]);
+    const [songsForUser, setSongsForUser] = useState([]);
     const [showMore, setShowMore] = useState(false);
     const [playlists, setPlaylists] = useState([]);
     const [playlistListenCounts, setPlaylistListenCounts] = useState({});
@@ -79,9 +80,41 @@ function Hub() {
     const isAuthenticated = !!localStorage.getItem('user');
 
 
+    const fetchCommonData = async () => {
+        if (isAuthenticated) {
+            await getSixSongsHighListeningForUser();
+        } else {
+            await getSixSongsHighListening();
+        }
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                await fetchCommonData();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        fetchData();
+    }, [isAuthenticated]);
+
+
     const getSixSongsHighListening = async () => {
         const temp = await songService.getSixSongsBest();
         setSongs(temp);
+        const listenCounts = {};
+        for (const song of temp){
+            const count = await songService.getTotalSongListenBySongId(song.songId)
+            listenCounts[song.songId] = count;
+        }
+        setSongListenCounts(listenCounts);
+    };
+
+
+    const getSixSongsHighListeningForUser = async () => {
+        const temp = await songService.getSixSongsBestForUser();
+        setSongsForUser(temp);
         const listenCounts = {};
         for (const song of temp){
             const count = await songService.getTotalSongListenBySongId(song.songId)
@@ -96,14 +129,23 @@ function Hub() {
     };
 
     const getAllPlaylists = async () => {
-        const temp = await playlistService.getAllPlaylists();
-        setPlaylists(temp);
-        const listenCounts = {};
-        for (const playlist of temp) {
-            const count = await playlistService.getTotalPlaylistListens(playlist.playlistId);
-            listenCounts[playlist.playlistId] = count;
+        if (!isAuthenticated) {
+            return [];
         }
-        setPlaylistListenCounts(listenCounts);
+        try {
+            const temp = await playlistService.getAllPlaylists();
+            setPlaylists(temp);
+            const listenCounts = {};
+            for (const playlist of temp) {
+                const count = await playlistService.getTotalPlaylistListens(playlist.playlistId);
+                listenCounts[playlist.playlistId] = count;
+            }
+            setPlaylistListenCounts(listenCounts);
+        } catch (error) {
+            console.error("Error fetching playlists in Hub:", error);
+            // Handle the error more gracefully if needed, e.g., set playlists to empty
+            setPlaylists([]);
+        }
     };
 
 
@@ -220,19 +262,35 @@ function Hub() {
             <Container withShadow={false}>
                 <Flex alignItems="center" justifyContent="between">
                     <Typography tag="h2">Nhạc Hot Gây Bão</Typography>
-                    <Link to={"/top-100-songs"} gd={{ color: "var(--color-text)" }}>
-                        <Button text="Tất cả" theme="transparent" size={1} icon={<MdArrowForwardIos />} iconPosition="right" gap={1} gd={{ color: "var(--color-text)" }} />
+                    <Link to={"/top-100-songs"} gd={{color: "var(--color-text)"}}>
+                        <Button text="Tất cả" theme="transparent" size={1} icon={<MdArrowForwardIos/>} iconPosition="right"
+                                gap={1} gd={{color: "var(--color-text)"}}/>
                     </Link>
                 </Flex>
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
-                    {songs && songs.map((song, index) => (
-                        <TopSongCard
-                            listenCount={songListenCounts[song.songId] || 0}
-                            songList={songs}
-                            song={song}
-                            key={index} />
-                    ))}
+                    {isAuthenticated ? (
+                        songsForUser && songsForUser.map((song, index) => (
+                            <TopSongCard
+                                key={index}
+                                listenCount={songListenCounts[song.songId] || 0}
+                                songList={songsForUser}
+                                song={song}
+                                index={index}
+                            />
+                        ))
+                    ) : (
+                        songs && songs.map((song, index) => (
+                            <TopSongCard
+                                key={index}
+                                listenCount={songListenCounts[song.songId] || 0}
+                                songList={songs}
+                                song={song}
+                                index={index}
+                            />
+                        ))
+                    )}
                 </Grid>
+
             </Container>
 
             {isAuthenticated && (

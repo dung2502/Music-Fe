@@ -17,6 +17,9 @@ import AlbumCard from "../../components/AlbumAndPlayListCard/AlbumCard";
 import * as PlaylistService from "../../core/services/PlayListService";
 import PlaylistCard from "../../components/AlbumAndPlayListCard/PlaylistCard";
 import * as playlistService from "../../core/services/PlayListService";
+import * as artistService from "../../core/services/ArtistService";
+import * as favoriteService from "../../core/services/FavoriteService";
+import {toast} from "react-toastify";
 
 export function FavoriteList() {
     const navigate = useNavigate();
@@ -30,35 +33,28 @@ export function FavoriteList() {
     } = usePlayMusic();
     const [favoriteSongs, setFavoriteSongs] = useState([]);
     const [favoriteAlbums, setFavoriteAlbums] = useState([]);
-    // const [favoriteArtists, setFavoriteArtists] = useState([]);
+    const [favoriteArtists, setFavoriteArtists] = useState([]);
     const [favoritePlayLists, setFavoritePlaylists] = useState([]);
     const [modalSongIndex, setModalSongIndex] = useState(0);
     const [isOpenSongMenu, setIsOpenSongMenu] = useState(false);
     const [numberSelected, setNumberSelected] = useState(0);
     const [playlistListenCounts, setPlaylistListenCounts] = useState({});
     const [playlistListenCountsFav, setPlaylistListenCountsFav] = useState({});
+    const [favoriteStatusMap, setFavoriteStatusMap] = useState({});
 
     const [playlists, setPlaylists] = useState([]);
-    // const playlistRef = useRef(null);
-    // useEffect(() => {
-    //
-    //     const fetchData = async () => {
-    //         await getFavoriteArtistList('','DESC',0,9);
-    //     }
-    //     fetchData();
-    // }, []);
 
     useEffect(() => {
-
         const fetchData = async () => {
             if (numberSelected === 0) {
                 await getFavoriteSongsList('','DESC',0,100);
             } else if(numberSelected === 1) {
                 await getFavoriteAlbumList('','DESC',0,100);
-            }else{
+            }else if(numberSelected === 2) {
                 await getFavoritePlaylist('','DESC',0,100);
+            }else {
+                await getFavoriteArtists('','DESC',0,100)
             }
-
         }
         fetchData().then().catch(console.error);
     }, [numberSelected]);
@@ -74,6 +70,10 @@ export function FavoriteList() {
                 case '#playlist':
                     setNumberSelected(2);
                     document.getElementById('playlist')?.scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case '#artist':
+                    setNumberSelected(3);
+                    document.getElementById('artist')?.scrollIntoView({ behavior: 'smooth' });
                     break;
                 case '#song':
                     setNumberSelected(0);
@@ -98,9 +98,19 @@ export function FavoriteList() {
         fetchPlaylists();
     }, [])
 
+    const getFavoriteArtists = async (sort, direction,page,size) => {
+        const temp = await artistService.getAllFavoriteArtists(sort, direction,page,size);
+        setFavoriteArtists(temp.content);
+    }
+
     const getFavoriteSongsList = async (sort, direction,page,size) => {
         const temp = await songService.getAllFavoriteSongs(sort, direction,page,size);
         setFavoriteSongs(temp.content);
+        const statusMap = {};
+        temp.content.forEach(song => {
+            statusMap[song.songId] = song.userFavoriteStatus || false;
+        });
+        setFavoriteStatusMap(statusMap);
     }
 
     const getFavoriteAlbumList = async (sort, direction,page,size) => {
@@ -115,21 +125,18 @@ export function FavoriteList() {
             const count = await playlistService.getTotalPlaylistListens(playlist.playlistId);
             listenCounts[playlist.playlistId] = count;
         }
-        console.log(listenCounts);
         setPlaylistListenCountsFav(listenCounts);
     }
 
     const getAllPlaylists = async () => {
         const temp = await playlistService.getAllPlaylistByUserId();
         setPlaylists(temp);
-        console.log(temp);
 
         const listenCounts = {};
         for (const playlist of temp) {
             const count = await playlistService.getTotalPlaylistListens(playlist.playlistId);
             listenCounts[playlist.playlistId] = count;
         }
-        console.log(listenCounts);
         setPlaylistListenCounts(listenCounts);
     };
 
@@ -154,46 +161,43 @@ export function FavoriteList() {
         setIsOpenSongMenu(false);
     }
 
-    const removeFromFavoriteSong = (song) => {
-
-    }
-
-
-    const columns = [
-        {
-            key: 'title',
-            header: 'BÀI HÁT',
-            render: (row) => <Flex>
-                <Typography gd={{fontSize:"15px", padding:"20px 5px"}}>
-                    <RiMusic2Line />
-                </Typography>
-                <Card srcImg={row?.songDTO.coverImageUrl} shape={"square"} sizeImg={50}
-                      title={<Flex>
-                          <Typography>
-                              {row.songDTO.title}
-                          </Typography>
-                          <Typography>
-                              Premium
-                          </Typography>
-                      </Flex>}
-                      long={true}
-                      description={row?.songDTO.artists.map(artist => (
-                          <a href="/public" key={artist.artistId}>{artist.artistName}, </a>
-                      ))}/>
-            </Flex>,
-        },
-        {
-            key: 'album',
-            header: 'ALBUM',
-            render: (row) => row.songDTO.album.title
-        },
-        {
-            key: 'thời gian',
-            header: <Flex right={true}>THỜI GIAN</Flex>,
-            render: (row) => <Flex right={true}><AiFillHeart style={{color:"#ec4899"}}/><TimeExtractor dateTime={row.addedAt}/></Flex>
+    const addNewFavoriteSong = async (song) => {
+        try {
+            const response = await favoriteService.addFavoriteSong(song);
+            if (response.success) {
+                setFavoriteStatusMap(prev => ({
+                    ...prev,
+                    [song.songId]: true
+                }));
+                toast.success("Đã thêm vào danh sách yêu thích");
+                await getFavoriteSongsList('','DESC',0,100);
+            } else {
+                toast.error(response.error || "Không thể thêm vào danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể thêm vào danh sách yêu thích");
+            console.error(error);
         }
-    ];
+    };
 
+    const deleteFavoriteSong = async (song) => {
+        try {
+            const response = await favoriteService.deleteFavoriteSong(song);
+            if (response.success) {
+                setFavoriteStatusMap(prev => ({
+                    ...prev,
+                    [song.songId]: false
+                }));
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+                await getFavoriteSongsList('','DESC',0,100);
+            } else {
+                toast.error(response.error || "Không thể xóa khỏi danh sách yêu thích");
+            }
+        } catch (error) {
+            toast.error("Không thể xóa khỏi danh sách yêu thích");
+            console.error(error);
+        }
+    }
     return (
         <Container>
             <Group>
@@ -256,6 +260,14 @@ export function FavoriteList() {
                         }}
                         text={"PLAYLIST"}
                 ></Button>
+                <Button id="artist" theme={"reset"}
+                        gd={numberSelected === 2 ? {color: "#fff"} : {}}
+                        onClick={() => {
+                            setNumberSelected(2);
+                            window.location.hash = 'artist';
+                        }}
+                        text={"CA SĨ"}
+                ></Button>
             </Flex>
 
             {numberSelected === 0 ? (
@@ -277,8 +289,27 @@ export function FavoriteList() {
                                   children={
                                       <Flex justifyContent={'end'} alignItems={'center'}>
                                           <Button className={'card-icon kara'} type={'button'} theme={'reset'} icon={<LiaMicrophoneAltSolid size={18}/>}></Button>
-                                          <Button className={`card-icon heart ${song.userFavoriteStatus ? "love" : ""}`} theme={'reset'}
-                                                  icon={<IoIosHeart size={18} fill={song.userFavoriteStatus ? "red" : ""}/>}></Button>
+
+                                          <Button
+                                              className="card-icon heart"
+                                              type="button"
+                                              theme="reset"
+                                              icon={
+                                                  <IoIosHeart
+                                                      size={22}
+                                                      fill={favoriteStatusMap[song.songId] ? "red" : "white"}
+                                                  />
+                                              }
+                                              onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (favoriteStatusMap[song.songId]) {
+                                                      deleteFavoriteSong(song);
+                                                  } else {
+                                                      addNewFavoriteSong(song);
+                                                  }
+                                              }}
+                                          />
+
                                           <Button className={'card-icon menu'} theme={'reset'} id={`active-song-menu-${song.songId}`}
                                                   onClick={(e) => {
                                                       e.stopPropagation();
@@ -340,7 +371,7 @@ export function FavoriteList() {
                     ))}
                 </Grid>
 
-            ) : (
+            ) : numberSelected === 2 ? (
                 <Grid columns={2} sm={2} md={3} xl={6} gap={6}>
                     {favoritePlayLists && favoritePlayLists.map((playlist, index) => (
                         <PlaylistCard
@@ -350,7 +381,25 @@ export function FavoriteList() {
                         />
                     ))}
                 </Grid>
-            )}`
+            ) : (
+                <Group className="song-artists">
+                    <Flex gap="20px" wrap>
+                        {favoriteArtists?.map(artist => (
+                            <Card
+                                className="circle"
+                                key={artist.artistId}
+                                shape="circle"
+                                srcImg={artist.avatar}
+                                urlLink={`/artists/${artist.artistId}`}
+                                LinkComponent={Link}
+                                alt={artist.artistName}
+                                title={artist.artistName} />
+                        ))}
+                    </Flex>
+                </Group>
+                )
+
+            }`
         </Container>
     );
 }

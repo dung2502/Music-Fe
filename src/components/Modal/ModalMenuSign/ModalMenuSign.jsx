@@ -63,7 +63,7 @@ const ModalMenuSignUp = ({isOpen, onClose}) => {
             };
             localStorage.setItem("user", JSON.stringify(user));
             const decodedToken = jwtDecode(userData.token);
-            
+
             if (decodedToken && window.location.pathname !== "/login") {
                 onClose();
                 showToast("Đăng nhập thành công!", 'success' , '5000');
@@ -109,7 +109,7 @@ const ModalMenuSignUp = ({isOpen, onClose}) => {
                 };
                 localStorage.setItem("user", JSON.stringify(user));
                 const decodedToken = jwtDecode(userData.data.token);
-                
+
                 if (decodedToken && window.location.pathname !== "/login") {
                     onClose();
                     showToast("Đăng nhập thành công!", 'success' , '5000');
@@ -144,7 +144,7 @@ const ModalMenuSignUp = ({isOpen, onClose}) => {
                 };
                 localStorage.setItem("user", JSON.stringify(userData));
                 const decodedToken = jwtDecode(user.data.token);
-                
+
                 if (decodedToken && window.location.pathname !== "/login") {
                     onClose();
                     showToast("Đăng nhập thành công!", 'success' , '5000');
@@ -169,7 +169,7 @@ const ModalMenuSignUp = ({isOpen, onClose}) => {
 
     return (
 
-        <Modal isOpen={isOpen} onClose={onClose} gd={{padding: "0.5rem",}} className="shadow shadow-slate-400">
+        <Modal isOpen={isOpen} onClose={onClose} gd={{padding: "0.5rem", minWidth: "350px"}} className="shadow shadow-slate-400">
             <>
                 {!isSignIn && !isSignUp && (
                     <AuthLanding

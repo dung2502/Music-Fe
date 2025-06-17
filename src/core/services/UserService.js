@@ -13,6 +13,18 @@ export const getAllUsers = async () => {
     }
 }
 
+export const getListAdminUsers = async () => {
+    try {
+        const response = await axiosClient.get('/users/list-admin');
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách admin:", error);
+        return [];
+    }
+};
+
+
 
 export const getAllCustomer = async (fullName, page) => {
     try {
@@ -40,6 +52,7 @@ export const getAllEmployee = async (searchContent, page) => {
 export const getUserById = async (userId) => {
     try {
         const temp = await axiosClient.get(`/users/${userId}`);
+        console.log(temp.data);
         return temp.data;
     } catch (e) {
         console.log(e)
