@@ -74,7 +74,7 @@ export const forgotPassword = async (data) => {
 export const logout = async() => {
     try {
         const userId = JSON.parse(localStorage.getItem("user")).userId || JSON.parse(localStorage.getItem("user")).uid ;
-        await axios.post(` http://localhost:9090/api/auth/logout?userId=${userId}`);
+        await axios.post(`${baseURL}/api/auth/logout?userId=${userId}`);
         localStorage.removeItem("user");
         window.location.href = "/";
     } catch (e) {

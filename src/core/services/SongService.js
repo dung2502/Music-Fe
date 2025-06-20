@@ -198,7 +198,6 @@ export const updateUserListens = async (songId) => {
     }
 }
 
-
 export const getRecentUserListens = async () => {
     const userData = localStorage.getItem('user');
     if (!userData) return [];
